@@ -9,7 +9,6 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	_ "github.com/golang-migrate/migrate/v4/source/github"
 	"log"
-	"os"
 )
 
 type Data struct {
@@ -19,8 +18,8 @@ type Data struct {
 // Init Initial the Database and Connection
 func (data *Data) Init() {
 
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=%s", os.Getenv("HOST"), os.Getenv("USER"), os.Getenv("PASSWORD"), os.Getenv("DBNAME"), os.Getenv("PORT"), os.Getenv("TIMEZONE"))
-
+	//dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=%s", os.Getenv("HOST"), os.Getenv("USER"), os.Getenv("PASSWORD"), os.Getenv("DBNAME"), os.Getenv("PORT"), os.Getenv("TIMEZONE"))
+	dsn := fmt.Sprintf("host=localhost user=mai password=1 dbname=researchdocument port=5432 sslmode=disable TimeZone=ASIA/HO_CHI_MINH")
 	fmt.Println("Connecting to database...")
 	db, err := sql.Open("postgres", dsn)
 
