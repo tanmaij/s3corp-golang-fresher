@@ -2,41 +2,59 @@ package repository
 
 import "s3corp-golang-fresher/internal/models"
 
-type SubdocumentRepository interface {
+type UserRepo interface {
+	Login(username string) (*models.User, error)
+	// GetUserByUsername Return one user with id parameter
+	GetUserByUsername(username string) (*models.User, error)
 
-	// GetByDocumentId Return a slice subdocument by Document paramater
-	GetByDocumentId(documentId string) (models.SubDocumentSlice, error)
+	// GetUsers Return a user Slice
+	GetUsers() (models.UserSlice, error)
 
-	// GetOneById Return one subdocument with id parameter
-	GetOneById(id int) (*models.SubDocument, error)
+	// CreateUser Insert data by user parameter
+	CreateUser(user models.User) error
 
-	// GetAll Return a subDocument Slice
-	GetAll() (models.SubDocumentSlice, error)
+	// UpdateUser Update one record by user parameter
+	UpdateUser(user models.User) (int64, error)
 
-	// CreateOne Insert data by subdocument parameter
-	CreateOne(subDocument models.SubDocument) error
-
-	// UpdateOne Update one record by subdocument parameter
-	UpdateOne(subDocument models.SubDocument) (int64, error)
-
-	// DeleteOneById Delete one record by subdocument parameter
-	DeleteOneById(subDocumentId int) (int64, error)
+	// DeleteUser Delete one record by username parameter
+	DeleteUser(username string) (int64, error)
 }
 
-type DocumentRepository interface {
+type DocItemRepo interface {
 
-	// GetOneById Return one document with id parameter
-	GetOneById(id string) (*models.Document, error)
+	// GetDocItemById Return one documentItem with id parameter
+	GetDocItemById(docItemId string) (*models.DocumentItem, error)
 
-	// GetAll Return a Document Slice
-	GetAll() (models.DocumentSlice, error)
+	// GetDocItems Return a subDocument Slice
+	GetDocItems() (models.DocumentItemSlice, error)
 
-	// CreateOne Insert data by document parameter
-	CreateOne(document models.Document) error
+	// CreateDocItem Insert data by documentItem parameter
+	CreateDocItem(subDocument models.DocumentItem) error
 
-	// UpdateOne Update one record by document parameter
-	UpdateOne(document models.Document) (int64, error)
+	// UpdateDocItem Update one record by documentItem parameter
+	UpdateDocItem(subDocument models.DocumentItem) (int64, error)
 
-	// DeleteOneById Delete one record by id parameter
-	DeleteOneById(documentId string) (int64, error)
+	// DeleteDocById Delete one record by documentItem parameter
+	DeleteDocById(subDocumentId string) (int64, error)
+}
+
+type DocRepo interface {
+
+	// GetDocById Return one document with id parameter
+	GetDocById(id string) (*models.Document, error)
+
+	// GetDocs Return a Document Slice
+	GetDocs() (models.DocumentSlice, error)
+
+	// GetDocsByUsername Return all doc of user with id parameter
+	GetDocsByUsername(username string) (models.DocumentSlice, error)
+
+	// CreateDoc Insert data by document parameter
+	CreateDoc(document models.Document) error
+
+	// UpdateDoc Update one record by document parameter
+	UpdateDoc(document models.Document) (int64, error)
+
+	// DeleteDocById Delete one record by id parameter
+	DeleteDocById(documentId string) (int64, error)
 }

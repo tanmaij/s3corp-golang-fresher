@@ -4,9 +4,11 @@
 package models
 
 var TableNames = struct {
-	Document    string
-	Subdocument string
+	Document     string
+	Documentitem string
+	User         string
 }{
-	Document:    "document",
-	Subdocument: "subdocument",
+	Document:     "document",
+	Documentitem: "documentitem",
+	User:         "user",
 }

@@ -26,7 +26,8 @@ import (
 type Document struct {
 	DocumentId string      `boil:"documentid" json:"documentid" toml:"documentid" yaml:"documentid"`
 	Subject    null.String `boil:"subject" json:"subject,omitempty" toml:"subject" yaml:"subject,omitempty"`
-	Createdat  null.Time   `boil:"createdat" json:"createdat,omitempty" toml:"createdat" yaml:"createdat,omitempty"`
+	CreatedAt  null.Time   `boil:"createdat" json:"createdat,omitempty" toml:"createdat" yaml:"createdat,omitempty"`
+	Username   null.String `boil:"username" json:"username,omitempty" toml:"username" yaml:"username,omitempty"`
 
 	R *documentR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L documentL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -35,21 +36,25 @@ type Document struct {
 var DocumentColumns = struct {
 	DocumentId string
 	Subject    string
-	Createdat  string
+	CreatedAt  string
+	Username   string
 }{
 	DocumentId: "documentid",
 	Subject:    "subject",
-	Createdat:  "createdat",
+	CreatedAt:  "createdat",
+	Username:   "username",
 }
 
 var DocumentTableColumns = struct {
 	DocumentId string
 	Subject    string
-	Createdat  string
+	CreatedAt  string
+	Username   string
 }{
 	DocumentId: "document.documentid",
 	Subject:    "document.subject",
-	Createdat:  "document.createdat",
+	CreatedAt:  "document.createdat",
+	Username:   "document.username",
 }
 
 // Generated where
@@ -128,23 +133,28 @@ func (w whereHelpernull_Time) IsNotNull() qm.QueryMod { return qmhelper.WhereIsN
 var DocumentWhere = struct {
 	DocumentId whereHelperstring
 	Subject    whereHelpernull_String
-	Createdat  whereHelpernull_Time
+	CreatedAt  whereHelpernull_Time
+	Username   whereHelpernull_String
 }{
 	DocumentId: whereHelperstring{field: "\"main\".\"document\".\"documentid\""},
 	Subject:    whereHelpernull_String{field: "\"main\".\"document\".\"subject\""},
-	Createdat:  whereHelpernull_Time{field: "\"main\".\"document\".\"createdat\""},
+	CreatedAt:  whereHelpernull_Time{field: "\"main\".\"document\".\"createdat\""},
+	Username:   whereHelpernull_String{field: "\"main\".\"document\".\"username\""},
 }
 
 // DocumentRels is where relationship names are stored.
 var DocumentRels = struct {
-	DocumentidSubdocuments string
+	UsernameUser            string
+	DocumentidDocumentitems string
 }{
-	DocumentidSubdocuments: "DocumentidSubdocuments",
+	UsernameUser:            "UsernameUser",
+	DocumentidDocumentitems: "DocumentidDocumentitems",
 }
 
 // documentR is where relationships are stored.
 type documentR struct {
-	DocumentidSubdocuments SubDocumentSlice `boil:"DocumentidSubdocuments" json:"DocumentidSubdocuments" toml:"DocumentidSubdocuments" yaml:"DocumentidSubdocuments"`
+	UsernameUser            *User             `boil:"UsernameUser" json:"UsernameUser" toml:"UsernameUser" yaml:"UsernameUser"`
+	DocumentidDocumentitems DocumentItemSlice `boil:"DocumentidDocumentitems" json:"DocumentidDocumentitems" toml:"DocumentidDocumentitems" yaml:"DocumentidDocumentitems"`
 }
 
 // NewStruct creates a new relationship struct
@@ -152,20 +162,27 @@ func (*documentR) NewStruct() *documentR {
 	return &documentR{}
 }
 
-func (r *documentR) GetDocumentidSubdocuments() SubDocumentSlice {
+func (r *documentR) GetUsernameUser() *User {
 	if r == nil {
 		return nil
 	}
-	return r.DocumentidSubdocuments
+	return r.UsernameUser
+}
+
+func (r *documentR) GetDocumentidDocumentitems() DocumentItemSlice {
+	if r == nil {
+		return nil
+	}
+	return r.DocumentidDocumentitems
 }
 
 // documentL is where Load methods for each relationship are stored.
 type documentL struct{}
 
 var (
-	documentAllColumns            = []string{"documentid", "subject", "createdat"}
+	documentAllColumns            = []string{"documentid", "subject", "createdat", "username"}
 	documentColumnsWithoutDefault = []string{}
-	documentColumnsWithDefault    = []string{"documentid", "subject", "createdat"}
+	documentColumnsWithDefault    = []string{"documentid", "subject", "createdat", "username"}
 	documentPrimaryKeyColumns     = []string{"documentid"}
 	documentGeneratedColumns      = []string{}
 )
@@ -448,23 +465,142 @@ func (q documentQuery) Exists(ctx context.Context, exec boil.ContextExecutor) (b
 	return count > 0, nil
 }
 
-// DocumentidSubdocuments retrieves all the subdocument's SubDocuments with an executor via documentid column.
-func (o *Document) DocumentidSubdocuments(mods ...qm.QueryMod) subDocumentQuery {
+// UsernameUser pointed to by the foreign key.
+func (o *Document) UsernameUser(mods ...qm.QueryMod) userQuery {
+	queryMods := []qm.QueryMod{
+		qm.Where("\"username\" = ?", o.Username),
+	}
+
+	queryMods = append(queryMods, mods...)
+
+	return Users(queryMods...)
+}
+
+// DocumentidDocumentitems retrieves all the documentitem's DocumentItems with an executor via documentid column.
+func (o *Document) DocumentidDocumentitems(mods ...qm.QueryMod) documentItemQuery {
 	var queryMods []qm.QueryMod
 	if len(mods) != 0 {
 		queryMods = append(queryMods, mods...)
 	}
 
 	queryMods = append(queryMods,
-		qm.Where("\"main\".\"subdocument\".\"documentid\"=?", o.DocumentId),
+		qm.Where("\"main\".\"documentitem\".\"documentid\"=?", o.DocumentId),
 	)
 
-	return SubDocuments(queryMods...)
+	return DocumentItems(queryMods...)
 }
 
-// LoadDocumentidSubdocuments allows an eager lookup of values, cached into the
+// LoadUsernameUser allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for an N-1 relationship.
+func (documentL) LoadUsernameUser(ctx context.Context, e boil.ContextExecutor, singular bool, maybeDocument interface{}, mods queries.Applicator) error {
+	var slice []*Document
+	var object *Document
+
+	if singular {
+		object = maybeDocument.(*Document)
+	} else {
+		slice = *maybeDocument.(*[]*Document)
+	}
+
+	args := make([]interface{}, 0, 1)
+	if singular {
+		if object.R == nil {
+			object.R = &documentR{}
+		}
+		if !queries.IsNil(object.Username) {
+			args = append(args, object.Username)
+		}
+
+	} else {
+	Outer:
+		for _, obj := range slice {
+			if obj.R == nil {
+				obj.R = &documentR{}
+			}
+
+			for _, a := range args {
+				if queries.Equal(a, obj.Username) {
+					continue Outer
+				}
+			}
+
+			if !queries.IsNil(obj.Username) {
+				args = append(args, obj.Username)
+			}
+
+		}
+	}
+
+	if len(args) == 0 {
+		return nil
+	}
+
+	query := NewQuery(
+		qm.From(`main.user`),
+		qm.WhereIn(`main.user.username in ?`, args...),
+	)
+	if mods != nil {
+		mods.Apply(query)
+	}
+
+	results, err := query.QueryContext(ctx, e)
+	if err != nil {
+		return errors.Wrap(err, "failed to eager load User")
+	}
+
+	var resultSlice []*User
+	if err = queries.Bind(results, &resultSlice); err != nil {
+		return errors.Wrap(err, "failed to bind eager loaded slice User")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results of eager load for user")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for user")
+	}
+
+	if len(documentAfterSelectHooks) != 0 {
+		for _, obj := range resultSlice {
+			if err := obj.doAfterSelectHooks(ctx, e); err != nil {
+				return err
+			}
+		}
+	}
+
+	if len(resultSlice) == 0 {
+		return nil
+	}
+
+	if singular {
+		foreign := resultSlice[0]
+		object.R.UsernameUser = foreign
+		if foreign.R == nil {
+			foreign.R = &userR{}
+		}
+		foreign.R.UsernameDocuments = append(foreign.R.UsernameDocuments, object)
+		return nil
+	}
+
+	for _, local := range slice {
+		for _, foreign := range resultSlice {
+			if queries.Equal(local.Username, foreign.Username) {
+				local.R.UsernameUser = foreign
+				if foreign.R == nil {
+					foreign.R = &userR{}
+				}
+				foreign.R.UsernameDocuments = append(foreign.R.UsernameDocuments, local)
+				break
+			}
+		}
+	}
+
+	return nil
+}
+
+// LoadDocumentidDocumentitems allows an eager lookup of values, cached into the
 // loaded structs of the objects. This is for a 1-M or N-M relationship.
-func (documentL) LoadDocumentidSubdocuments(ctx context.Context, e boil.ContextExecutor, singular bool, maybeDocument interface{}, mods queries.Applicator) error {
+func (documentL) LoadDocumentidDocumentitems(ctx context.Context, e boil.ContextExecutor, singular bool, maybeDocument interface{}, mods queries.Applicator) error {
 	var slice []*Document
 	var object *Document
 
@@ -502,8 +638,8 @@ func (documentL) LoadDocumentidSubdocuments(ctx context.Context, e boil.ContextE
 	}
 
 	query := NewQuery(
-		qm.From(`main.subdocument`),
-		qm.WhereIn(`main.subdocument.documentid in ?`, args...),
+		qm.From(`main.documentitem`),
+		qm.WhereIn(`main.documentitem.documentid in ?`, args...),
 	)
 	if mods != nil {
 		mods.Apply(query)
@@ -511,22 +647,22 @@ func (documentL) LoadDocumentidSubdocuments(ctx context.Context, e boil.ContextE
 
 	results, err := query.QueryContext(ctx, e)
 	if err != nil {
-		return errors.Wrap(err, "failed to eager load subdocument")
+		return errors.Wrap(err, "failed to eager load documentitem")
 	}
 
-	var resultSlice []*SubDocument
+	var resultSlice []*DocumentItem
 	if err = queries.Bind(results, &resultSlice); err != nil {
-		return errors.Wrap(err, "failed to bind eager loaded slice subdocument")
+		return errors.Wrap(err, "failed to bind eager loaded slice documentitem")
 	}
 
 	if err = results.Close(); err != nil {
-		return errors.Wrap(err, "failed to close results in eager load on subdocument")
+		return errors.Wrap(err, "failed to close results in eager load on documentitem")
 	}
 	if err = results.Err(); err != nil {
-		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for subdocument")
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for documentitem")
 	}
 
-	if len(subDocumentAfterSelectHooks) != 0 {
+	if len(documentItemAfterSelectHooks) != 0 {
 		for _, obj := range resultSlice {
 			if err := obj.doAfterSelectHooks(ctx, e); err != nil {
 				return err
@@ -534,10 +670,10 @@ func (documentL) LoadDocumentidSubdocuments(ctx context.Context, e boil.ContextE
 		}
 	}
 	if singular {
-		object.R.DocumentidSubdocuments = resultSlice
+		object.R.DocumentidDocumentitems = resultSlice
 		for _, foreign := range resultSlice {
 			if foreign.R == nil {
-				foreign.R = &subDocumentR{}
+				foreign.R = &documentItemR{}
 			}
 			foreign.R.DocumentidDocument = object
 		}
@@ -547,9 +683,9 @@ func (documentL) LoadDocumentidSubdocuments(ctx context.Context, e boil.ContextE
 	for _, foreign := range resultSlice {
 		for _, local := range slice {
 			if queries.Equal(local.DocumentId, foreign.Documentid) {
-				local.R.DocumentidSubdocuments = append(local.R.DocumentidSubdocuments, foreign)
+				local.R.DocumentidDocumentitems = append(local.R.DocumentidDocumentitems, foreign)
 				if foreign.R == nil {
-					foreign.R = &subDocumentR{}
+					foreign.R = &documentItemR{}
 				}
 				foreign.R.DocumentidDocument = local
 				break
@@ -560,11 +696,91 @@ func (documentL) LoadDocumentidSubdocuments(ctx context.Context, e boil.ContextE
 	return nil
 }
 
-// AddDocumentidSubdocuments adds the given related objects to the existing relationships
+// SetUsernameUser of the document to the related item.
+// Sets o.R.UsernameUser to related.
+// Adds o to related.R.UsernameDocuments.
+func (o *Document) SetUsernameUser(ctx context.Context, exec boil.ContextExecutor, insert bool, related *User) error {
+	var err error
+	if insert {
+		if err = related.Insert(ctx, exec, boil.Infer()); err != nil {
+			return errors.Wrap(err, "failed to insert into foreign table")
+		}
+	}
+
+	updateQuery := fmt.Sprintf(
+		"UPDATE \"main\".\"document\" SET %s WHERE %s",
+		strmangle.SetParamNames("\"", "\"", 1, []string{"username"}),
+		strmangle.WhereClause("\"", "\"", 2, documentPrimaryKeyColumns),
+	)
+	values := []interface{}{related.Username, o.DocumentId}
+
+	if boil.IsDebug(ctx) {
+		writer := boil.DebugWriterFrom(ctx)
+		fmt.Fprintln(writer, updateQuery)
+		fmt.Fprintln(writer, values)
+	}
+	if _, err = exec.ExecContext(ctx, updateQuery, values...); err != nil {
+		return errors.Wrap(err, "failed to update local table")
+	}
+
+	queries.Assign(&o.Username, related.Username)
+	if o.R == nil {
+		o.R = &documentR{
+			UsernameUser: related,
+		}
+	} else {
+		o.R.UsernameUser = related
+	}
+
+	if related.R == nil {
+		related.R = &userR{
+			UsernameDocuments: DocumentSlice{o},
+		}
+	} else {
+		related.R.UsernameDocuments = append(related.R.UsernameDocuments, o)
+	}
+
+	return nil
+}
+
+// RemoveUsernameUser relationship.
+// Sets o.R.UsernameUser to nil.
+// Removes o from all passed in related items' relationships struct.
+func (o *Document) RemoveUsernameUser(ctx context.Context, exec boil.ContextExecutor, related *User) error {
+	var err error
+
+	queries.SetScanner(&o.Username, nil)
+	if _, err = o.Update(ctx, exec, boil.Whitelist("username")); err != nil {
+		return errors.Wrap(err, "failed to update local table")
+	}
+
+	if o.R != nil {
+		o.R.UsernameUser = nil
+	}
+	if related == nil || related.R == nil {
+		return nil
+	}
+
+	for i, ri := range related.R.UsernameDocuments {
+		if queries.Equal(o.Username, ri.Username) {
+			continue
+		}
+
+		ln := len(related.R.UsernameDocuments)
+		if ln > 1 && i < ln-1 {
+			related.R.UsernameDocuments[i] = related.R.UsernameDocuments[ln-1]
+		}
+		related.R.UsernameDocuments = related.R.UsernameDocuments[:ln-1]
+		break
+	}
+	return nil
+}
+
+// AddDocumentidDocumentitems adds the given related objects to the existing relationships
 // of the document, optionally inserting them as new records.
-// Appends related to o.R.DocumentidSubdocuments.
+// Appends related to o.R.DocumentidDocumentitems.
 // Sets related.R.DocumentidDocument appropriately.
-func (o *Document) AddDocumentidSubdocuments(ctx context.Context, exec boil.ContextExecutor, insert bool, related ...*SubDocument) error {
+func (o *Document) AddDocumentidDocumentitems(ctx context.Context, exec boil.ContextExecutor, insert bool, related ...*DocumentItem) error {
 	var err error
 	for _, rel := range related {
 		if insert {
@@ -574,11 +790,11 @@ func (o *Document) AddDocumentidSubdocuments(ctx context.Context, exec boil.Cont
 			}
 		} else {
 			updateQuery := fmt.Sprintf(
-				"UPDATE \"main\".\"subdocument\" SET %s WHERE %s",
+				"UPDATE \"main\".\"documentitem\" SET %s WHERE %s",
 				strmangle.SetParamNames("\"", "\"", 1, []string{"documentid"}),
-				strmangle.WhereClause("\"", "\"", 2, subDocumentPrimaryKeyColumns),
+				strmangle.WhereClause("\"", "\"", 2, documentItemPrimaryKeyColumns),
 			)
-			values := []interface{}{o.DocumentId, rel.subDocumentId}
+			values := []interface{}{o.DocumentId, rel.DocumentItemId}
 
 			if boil.IsDebug(ctx) {
 				writer := boil.DebugWriterFrom(ctx)
@@ -595,15 +811,15 @@ func (o *Document) AddDocumentidSubdocuments(ctx context.Context, exec boil.Cont
 
 	if o.R == nil {
 		o.R = &documentR{
-			DocumentidSubdocuments: related,
+			DocumentidDocumentitems: related,
 		}
 	} else {
-		o.R.DocumentidSubdocuments = append(o.R.DocumentidSubdocuments, related...)
+		o.R.DocumentidDocumentitems = append(o.R.DocumentidDocumentitems, related...)
 	}
 
 	for _, rel := range related {
 		if rel.R == nil {
-			rel.R = &subDocumentR{
+			rel.R = &documentItemR{
 				DocumentidDocument: o,
 			}
 		} else {
@@ -613,14 +829,14 @@ func (o *Document) AddDocumentidSubdocuments(ctx context.Context, exec boil.Cont
 	return nil
 }
 
-// SetDocumentidSubdocuments removes all previously related items of the
+// SetDocumentidDocumentitems removes all previously related items of the
 // document replacing them completely with the passed
 // in related items, optionally inserting them as new records.
-// Sets o.R.DocumentidDocument's DocumentidSubdocuments accordingly.
-// Replaces o.R.DocumentidSubdocuments with related.
-// Sets related.R.DocumentidDocument's DocumentidSubdocuments accordingly.
-func (o *Document) SetDocumentidSubdocuments(ctx context.Context, exec boil.ContextExecutor, insert bool, related ...*SubDocument) error {
-	query := "update \"main\".\"subdocument\" set \"documentid\" = null where \"documentid\" = $1"
+// Sets o.R.DocumentidDocument's DocumentidDocumentitems accordingly.
+// Replaces o.R.DocumentidDocumentitems with related.
+// Sets related.R.DocumentidDocument's DocumentidDocumentitems accordingly.
+func (o *Document) SetDocumentidDocumentitems(ctx context.Context, exec boil.ContextExecutor, insert bool, related ...*DocumentItem) error {
+	query := "update \"main\".\"documentitem\" set \"documentid\" = null where \"documentid\" = $1"
 	values := []interface{}{o.DocumentId}
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
@@ -633,7 +849,7 @@ func (o *Document) SetDocumentidSubdocuments(ctx context.Context, exec boil.Cont
 	}
 
 	if o.R != nil {
-		for _, rel := range o.R.DocumentidSubdocuments {
+		for _, rel := range o.R.DocumentidDocumentitems {
 			queries.SetScanner(&rel.Documentid, nil)
 			if rel.R == nil {
 				continue
@@ -641,16 +857,16 @@ func (o *Document) SetDocumentidSubdocuments(ctx context.Context, exec boil.Cont
 
 			rel.R.DocumentidDocument = nil
 		}
-		o.R.DocumentidSubdocuments = nil
+		o.R.DocumentidDocumentitems = nil
 	}
 
-	return o.AddDocumentidSubdocuments(ctx, exec, insert, related...)
+	return o.AddDocumentidDocumentitems(ctx, exec, insert, related...)
 }
 
-// RemoveDocumentidSubdocuments relationships from objects passed in.
-// Removes related items from R.DocumentidSubdocuments (uses pointer comparison, removal does not keep order)
+// RemoveDocumentidDocumentitems relationships from objects passed in.
+// Removes related items from R.DocumentidDocumentitems (uses pointer comparison, removal does not keep order)
 // Sets related.R.DocumentidDocument.
-func (o *Document) RemoveDocumentidSubdocuments(ctx context.Context, exec boil.ContextExecutor, related ...*SubDocument) error {
+func (o *Document) RemoveDocumentidDocumentitems(ctx context.Context, exec boil.ContextExecutor, related ...*DocumentItem) error {
 	if len(related) == 0 {
 		return nil
 	}
@@ -670,16 +886,16 @@ func (o *Document) RemoveDocumentidSubdocuments(ctx context.Context, exec boil.C
 	}
 
 	for _, rel := range related {
-		for i, ri := range o.R.DocumentidSubdocuments {
+		for i, ri := range o.R.DocumentidDocumentitems {
 			if rel != ri {
 				continue
 			}
 
-			ln := len(o.R.DocumentidSubdocuments)
+			ln := len(o.R.DocumentidDocumentitems)
 			if ln > 1 && i < ln-1 {
-				o.R.DocumentidSubdocuments[i] = o.R.DocumentidSubdocuments[ln-1]
+				o.R.DocumentidDocumentitems[i] = o.R.DocumentidDocumentitems[ln-1]
 			}
-			o.R.DocumentidSubdocuments = o.R.DocumentidSubdocuments[:ln-1]
+			o.R.DocumentidDocumentitems = o.R.DocumentidDocumentitems[:ln-1]
 			break
 		}
 	}

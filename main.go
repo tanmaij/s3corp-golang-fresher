@@ -20,17 +20,22 @@ func main() {
 	var port string = ":3333"
 	fmt.Println("Server has started on Port", port)
 
-	documentRepository := repository.DocumentRepositoryImpl{Data: &data}
-	documentService := service.DocumentServiceImpl{DocumentReponsitory: documentRepository}
-	documentHandler := handler.DocumentHandler{DocumentService: documentService}
+	userRepo := repository.NewUserRepo(&data)
+	userService := service.NewUserService(userRepo)
+	userHandler := handler.NewUserHandler(userService)
 
-	subdocumentRepository := repository.SubDocumentReponsitoryImpl{Data: &data}
-	subdocumentService := service.SubDocumentServiceImpl{SubDocumentReponsitory: subdocumentRepository}
-	subdocumentHandler := handler.SubDocumentHandler{SubDocumentService: subdocumentService}
+	docItemRepo := repository.NewDocItemRepo(&data)
+	docItemService := service.NewDocItemService(docItemRepo)
+	docItemHandler := handler.NewDocItemHandler(docItemService)
+
+	docRepo := repository.NewDocRepo(&data)
+	docService := service.NewDocService(docRepo)
+	docHandler := handler.NewDocHandler(docService)
 
 	r.Route("/api", func(r chi.Router) {
-		r.Route("/document", documentHandler.DocumentHandler)
-		r.Route("/sub-document", subdocumentHandler.SubDocumentHandler)
+		r.Route("/document", docHandler.DocHandler)
+		r.Route("/document-item", docItemHandler.DocItemHandler)
+		r.Route("/user", userHandler.UserHandler)
 	})
 
 	http.ListenAndServe(port, r)

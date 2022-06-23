@@ -15,6 +15,10 @@ type Data struct {
 	DB *sql.DB
 }
 
+func NewData(db *sql.DB) Data {
+	return Data{db}
+}
+
 // Init Initial the Database and Connection
 func (data *Data) Init() {
 

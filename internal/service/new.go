@@ -5,40 +5,60 @@ import (
 	"s3corp-golang-fresher/utils"
 )
 
-type DocumentService interface {
+type UserService interface {
+	// Login with username and password
+	Login(username string, password string) (*models.User, utils.Error)
+	// GetUserByUsername Return one user with id parameter
+	GetUserByUsername(username string) (*models.User, utils.Error)
 
-	// GetOneById Return one Document with id parameter
-	GetOneById(documentId string) (*models.Document, *utils.Error)
+	// GetUsers Return a user Slice
+	GetUsers() (models.UserSlice, utils.Error)
 
-	// GetAll Return a Document Slice
-	GetAll() (models.DocumentSlice, *utils.Error)
+	// CreateUser Insert data by user parameter
+	CreateUser(user models.User) utils.Error
 
-	// CreateOne Insert data by document parameter
-	CreateOne(document models.Document) *utils.Error
+	// UpdateUser Update one record by user parameter
+	UpdateUser(user models.User) utils.Error
 
-	// UpdateOne Update one record by document parameter
-	UpdateOne(document models.Document) *utils.Error
-
-	// DeleteOneById Delete one record by id parameter
-	DeleteOneById(documentId string) *utils.Error
+	// DeleteUser Delete one record by username parameter
+	DeleteUser(username string) utils.Error
 }
 
-type SubDocumentService interface {
-	// GetByDocumentId Return a slice subdocument by Document paramater
-	GetByDocumentId(documentId string) (models.SubDocumentSlice, *utils.Error)
+type DocItemService interface {
 
-	// GetOneById Return one subdocument with id parameter
-	GetOneById(id int) (*models.SubDocument, *utils.Error)
+	// GetDocItemById Return one documentItem with id parameter
+	GetDocItemById(docItemId string) (*models.DocumentItem, utils.Error)
 
-	// GetAll Return a subDocument Slice
-	GetAll() (models.SubDocumentSlice, *utils.Error)
+	// GetDocItems Return a subDocument Slice
+	GetDocItems() (models.DocumentItemSlice, utils.Error)
 
-	// CreateOne Insert data by subdocument parameter
-	CreateOne(subDocument models.SubDocument) *utils.Error
+	// CreateDocItem Insert data by documentItem parameter
+	CreateDocItem(docItem models.DocumentItem) utils.Error
 
-	// UpdateOne Update one record by subdocument parameter
-	UpdateOne(subDocument models.SubDocument) *utils.Error
+	// UpdateDocItem Update one record by documentItem parameter
+	UpdateDocItem(docItem models.DocumentItem) utils.Error
 
-	// DeleteOneById Delete one record by subdocument parameter
-	DeleteOneById(subDocumentId int) *utils.Error
+	// DeleteDocItemById DeleteDocById Delete one record by documentItemId parameter
+	DeleteDocItemById(docItemId string) utils.Error
+}
+
+type DocService interface {
+
+	// GetDocById Return one document with id parameter
+	GetDocById(docId string) (*models.Document, utils.Error)
+
+	// GetDocs Return a Document Slice
+	GetDocs() (models.DocumentSlice, utils.Error)
+
+	// GetDocsByUsername Return all doc of user with id parameter
+	GetDocsByUsername(username string) (models.DocumentSlice, utils.Error)
+
+	// CreateDoc Insert data by document parameter
+	CreateDoc(document models.Document) utils.Error
+
+	// UpdateDoc Update one record by document parameter
+	UpdateDoc(document models.Document) utils.Error
+
+	// DeleteDocById Delete one record by id parameter
+	DeleteDocById(documentId string) utils.Error
 }

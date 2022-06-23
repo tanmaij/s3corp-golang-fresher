@@ -13,14 +13,15 @@ sslmode = "disable"
 schema = "main"
 
 # Although team_names works fine without configuration, we use it here for illustrative purposes
-[aliases.tables.SubDocument]
-up_plural     = "SubDocuments"
-up_singular   = "SubDocument"
-down_plural   = "subDocuments"
-down_singular = "subDocument"
+[aliases.tables.DocumentItem]
+up_plural     = "DocumentItems"
+up_singular   = "DocumentItem"
+down_plural   = "documentItems"
+down_singular = "documentItem"
 # Columns can also be aliased.
-[aliases.tables.SubDocument.columns]
-SubDocumentId = "subDocumentId"
+[aliases.tables.DocumentItem.columns]
+DocumentItemId = "DocumentItemId"
+CreatedAt="CreatedAt"
 
 
 [aliases.tables.Document]
@@ -31,3 +32,4 @@ down_singular = "document"
 # Columns can also be aliased.
 [aliases.tables.Document.columns]
 DocumentId = "DocumentId"
+CreatedAt = "CreatedAt"
