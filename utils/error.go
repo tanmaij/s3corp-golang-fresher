@@ -17,3 +17,11 @@ func (error Error) Response(w http.ResponseWriter) {
 func NewError(message string, statusCode int) Error {
 	return Error{message, statusCode}
 }
+
+const (
+	UserAlreadyExist    = "User already exist"
+	PasswordIsIncorrect = "Password is incorrect"
+	Successfully        = "Successfully"
+	InternalServerError = "Internal Server Error"
+	NotExist            = "Not exist"
+)
