@@ -12,21 +12,23 @@ import (
 
 func main() {
 
-	db := data.NewDB()
+	data := data.Data{}
+
+	data.Init()
 
 	var r *chi.Mux = chi.NewRouter()
 	var port string = ":3333"
 	fmt.Println("Server has started on Port", port)
 
-	userRepo := repository.NewUserRepo(db)
+	userRepo := repository.NewUserRepo(&data)
 	userService := service.NewUserService(userRepo)
 	userHandler := handler.NewUserHandler(userService)
 
-	docItemRepo := repository.NewDocItemRepo(db)
+	docItemRepo := repository.NewDocItemRepo(&data)
 	docItemService := service.NewDocItemService(docItemRepo)
 	docItemHandler := handler.NewDocItemHandler(docItemService)
 
-	docRepo := repository.NewDocRepo(db)
+	docRepo := repository.NewDocRepo(&data)
 	docService := service.NewDocService(docRepo)
 	docHandler := handler.NewDocHandler(docService)
 
