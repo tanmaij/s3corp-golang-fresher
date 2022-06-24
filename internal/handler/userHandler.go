@@ -8,7 +8,6 @@ import (
 	"s3corp-golang-fresher/internal/models"
 	"s3corp-golang-fresher/internal/service"
 	"s3corp-golang-fresher/utils"
-	"strings"
 )
 
 type UserHandler struct {
@@ -38,7 +37,7 @@ func (userHandler UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(utils.Response{Data: "Username is NOT FOUND"})
 		return
 	}
-	password, ok := user["password"]
+	password, ok := user["content"]
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(utils.Response{Data: "Password is NOT FOUND"})
@@ -107,11 +106,6 @@ func (userHandler UserHandler) CreateUser(w http.ResponseWriter, r *http.Request
 		json.NewEncoder(w).Encode(utils.Response{Data: "Email is NOT FOUND"})
 		return
 	}
-	if !strings.Contains(email.(string), "@") || strings.Count(email.(string), "@") > 1 {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(utils.Response{Data: "Email is NOT CORRECT"})
-		return
-	}
 	newUser := models.User{Password: null.String{String: password.(string), Valid: true},
 		Username: username.(string),
 		Email:    null.String{String: email.(string), Valid: true},
@@ -151,17 +145,12 @@ func (userHandler UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request
 		json.NewEncoder(w).Encode(utils.Response{Data: "Email is NOT FOUND"})
 		return
 	}
-	if !strings.Contains(email.(string), "@") || strings.Count(email.(string), "@") > 1 {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(utils.Response{Data: "Email is NOT CORRECT"})
-		return
-	}
 	newUser := models.User{
 		Password: null.String{String: password.(string), Valid: true},
 		Username: username,
 		Email:    null.String{String: email.(string), Valid: true},
 		Name:     null.String{String: name.(string), Valid: true}}
-	err := userHandler.UserService.UpdateUser(newUser)
+	err := userHandler.UserService.CreateUser(newUser)
 
 	if err.StatusCode != http.StatusOK {
 		err.Response(w)
