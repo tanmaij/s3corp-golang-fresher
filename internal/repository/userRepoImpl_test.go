@@ -3,11 +3,13 @@ package repository
 import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/volatiletech/null/v8"
+	"s3corp-golang-fresher/data"
 	"s3corp-golang-fresher/internal/models"
 	"testing"
 )
 
 var userRepo UserRepo
+var dataMock data.Data
 
 func TestUserRepo_UpdateUser(t *testing.T) {
 
@@ -16,8 +18,11 @@ func TestUserRepo_UpdateUser(t *testing.T) {
 	mock.ExpectBegin()
 	mock.ExpectExec(`UPDATE "main"."user"`).WithArgs("1", "mai@gmail.com", "Mãi", "mai").WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit()
-	db.Begin()
-	userRepo = NewUserRepo(db)
+
+	dataMock = data.NewData(db)
+	dataMock.DB.Begin()
+
+	userRepo = NewUserRepo(&dataMock)
 	affectedRows, err := userRepo.UpdateUser(models.User{
 		Username: "mai",
 		Password: null.String{String: "1", Valid: true},
@@ -29,7 +34,7 @@ func TestUserRepo_UpdateUser(t *testing.T) {
 		t.Errorf("Update is failed ")
 	}
 
-	db.Close()
+	dataMock.DB.Close()
 }
 func TestUserRepo_CreateUser(t *testing.T) {
 
@@ -39,9 +44,10 @@ func TestUserRepo_CreateUser(t *testing.T) {
 	mock.ExpectExec(`INSERT INTO "main"."user"`).WithArgs("mai", "1", "mai@gmail.com", "Mãi").WillReturnResult(sqlmock.NewErrorResult(nil))
 	mock.ExpectCommit()
 
-	db.Begin()
+	dataMock = data.NewData(db)
+	dataMock.DB.Begin()
 
-	userRepo = NewUserRepo(db)
+	userRepo = NewUserRepo(&dataMock)
 	err := userRepo.CreateUser(models.User{
 		Password: null.String{String: "1", Valid: true},
 		Username: "mai",
@@ -52,7 +58,7 @@ func TestUserRepo_CreateUser(t *testing.T) {
 	if err != nil {
 		t.Errorf("Insert is failed ")
 	}
-	db.Close()
+	dataMock.DB.Close()
 }
 func TestUser_DeleteUser(t *testing.T) {
 	db, mock, _ := sqlmock.New()
@@ -61,19 +67,20 @@ func TestUser_DeleteUser(t *testing.T) {
 	mock.ExpectExec(`DELETE FROM "main"."user"`).WithArgs("mai").WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit()
 
-	db.Begin()
+	dataMock = data.NewData(db)
+	dataMock.DB.Begin()
 
-	userRepo = NewUserRepo(db)
-	affectedRows, err := userRepo.DeleteUser("mai")
+	userRepo = NewUserRepo(&dataMock)
+	affectecRows, err := userRepo.DeleteUser("mai")
 
 	t.Log(err)
 	if err != nil {
 		t.Errorf("Delete is failed ")
 	}
-	if affectedRows != 1 {
+	if affectecRows != 1 {
 		t.Errorf("Delete is failed ")
 	}
-	db.Close()
+	dataMock.DB.Close()
 }
 func TestUserRepo_GetUsers(t *testing.T) {
 
@@ -83,15 +90,16 @@ func TestUserRepo_GetUsers(t *testing.T) {
 	mock.ExpectQuery(`SELECT "main"."user".* FROM "main"."user"`).WillReturnRows(sqlmock.NewRows([]string{"username", "password", "email", "name"}).AddRow("mai", "1", "email", "Mai"))
 	mock.ExpectCommit()
 
-	db.Begin()
+	dataMock = data.NewData(db)
+	dataMock.DB.Begin()
 
-	userRepo = NewUserRepo(db)
+	userRepo = NewUserRepo(&dataMock)
 	users, err := userRepo.GetUsers()
 	if err != nil {
 		t.Errorf("Error get data")
 	}
 	t.Log(err, users[0].Username)
-	db.Close()
+	dataMock.DB.Close()
 }
 func TestUserRepo_Login(t *testing.T) {
 
@@ -101,13 +109,14 @@ func TestUserRepo_Login(t *testing.T) {
 	mock.ExpectQuery(`SELECT "username", "password" FROM "main"."user"`).WithArgs("mai").WillReturnRows(sqlmock.NewRows([]string{"username", "password"}).AddRow("mai", "1"))
 	mock.ExpectCommit()
 
-	db.Begin()
+	dataMock = data.NewData(db)
+	dataMock.DB.Begin()
 
-	userRepo = NewUserRepo(db)
+	userRepo = NewUserRepo(&dataMock)
 	user, err := userRepo.Login("mai")
 	if err != nil {
 		t.Errorf("Error get data")
 	}
 	t.Log(err, user)
-	db.Close()
+	dataMock.DB.Close()
 }
