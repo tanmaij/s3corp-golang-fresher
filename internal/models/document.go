@@ -24,8 +24,8 @@ import (
 
 // Document is an object representing the database table.
 type Document struct {
-	DocumentId string      `boil:"documentid" json:"documentid" toml:"documentid" yaml:"documentid"`
-	Subject    null.String `boil:"subject" json:"subject,omitempty" toml:"subject" yaml:"subject,omitempty"`
+	DocumentID string      `boil:"documentid" json:"documentid" toml:"documentid" yaml:"documentid"`
+	Subject    string      `boil:"subject" json:"subject" toml:"subject" yaml:"subject"`
 	CreatedAt  null.Time   `boil:"createdat" json:"createdat,omitempty" toml:"createdat" yaml:"createdat,omitempty"`
 	Username   null.String `boil:"username" json:"username,omitempty" toml:"username" yaml:"username,omitempty"`
 
@@ -34,24 +34,24 @@ type Document struct {
 }
 
 var DocumentColumns = struct {
-	DocumentId string
+	DocumentID string
 	Subject    string
 	CreatedAt  string
 	Username   string
 }{
-	DocumentId: "documentid",
+	DocumentID: "documentid",
 	Subject:    "subject",
 	CreatedAt:  "createdat",
 	Username:   "username",
 }
 
 var DocumentTableColumns = struct {
-	DocumentId string
+	DocumentID string
 	Subject    string
 	CreatedAt  string
 	Username   string
 }{
-	DocumentId: "document.documentid",
+	DocumentID: "document.documentid",
 	Subject:    "document.subject",
 	CreatedAt:  "document.createdat",
 	Username:   "document.username",
@@ -82,30 +82,6 @@ func (w whereHelperstring) NIN(slice []string) qm.QueryMod {
 	return qm.WhereNotIn(fmt.Sprintf("%s NOT IN ?", w.field), values...)
 }
 
-type whereHelpernull_String struct{ field string }
-
-func (w whereHelpernull_String) EQ(x null.String) qm.QueryMod {
-	return qmhelper.WhereNullEQ(w.field, false, x)
-}
-func (w whereHelpernull_String) NEQ(x null.String) qm.QueryMod {
-	return qmhelper.WhereNullEQ(w.field, true, x)
-}
-func (w whereHelpernull_String) LT(x null.String) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.LT, x)
-}
-func (w whereHelpernull_String) LTE(x null.String) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.LTE, x)
-}
-func (w whereHelpernull_String) GT(x null.String) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.GT, x)
-}
-func (w whereHelpernull_String) GTE(x null.String) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.GTE, x)
-}
-
-func (w whereHelpernull_String) IsNull() qm.QueryMod    { return qmhelper.WhereIsNull(w.field) }
-func (w whereHelpernull_String) IsNotNull() qm.QueryMod { return qmhelper.WhereIsNotNull(w.field) }
-
 type whereHelpernull_Time struct{ field string }
 
 func (w whereHelpernull_Time) EQ(x null.Time) qm.QueryMod {
@@ -130,14 +106,38 @@ func (w whereHelpernull_Time) GTE(x null.Time) qm.QueryMod {
 func (w whereHelpernull_Time) IsNull() qm.QueryMod    { return qmhelper.WhereIsNull(w.field) }
 func (w whereHelpernull_Time) IsNotNull() qm.QueryMod { return qmhelper.WhereIsNotNull(w.field) }
 
+type whereHelpernull_String struct{ field string }
+
+func (w whereHelpernull_String) EQ(x null.String) qm.QueryMod {
+	return qmhelper.WhereNullEQ(w.field, false, x)
+}
+func (w whereHelpernull_String) NEQ(x null.String) qm.QueryMod {
+	return qmhelper.WhereNullEQ(w.field, true, x)
+}
+func (w whereHelpernull_String) LT(x null.String) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.LT, x)
+}
+func (w whereHelpernull_String) LTE(x null.String) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.LTE, x)
+}
+func (w whereHelpernull_String) GT(x null.String) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.GT, x)
+}
+func (w whereHelpernull_String) GTE(x null.String) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.GTE, x)
+}
+
+func (w whereHelpernull_String) IsNull() qm.QueryMod    { return qmhelper.WhereIsNull(w.field) }
+func (w whereHelpernull_String) IsNotNull() qm.QueryMod { return qmhelper.WhereIsNotNull(w.field) }
+
 var DocumentWhere = struct {
-	DocumentId whereHelperstring
-	Subject    whereHelpernull_String
+	DocumentID whereHelperstring
+	Subject    whereHelperstring
 	CreatedAt  whereHelpernull_Time
 	Username   whereHelpernull_String
 }{
-	DocumentId: whereHelperstring{field: "\"main\".\"document\".\"documentid\""},
-	Subject:    whereHelpernull_String{field: "\"main\".\"document\".\"subject\""},
+	DocumentID: whereHelperstring{field: "\"main\".\"document\".\"documentid\""},
+	Subject:    whereHelperstring{field: "\"main\".\"document\".\"subject\""},
 	CreatedAt:  whereHelpernull_Time{field: "\"main\".\"document\".\"createdat\""},
 	Username:   whereHelpernull_String{field: "\"main\".\"document\".\"username\""},
 }
@@ -181,8 +181,8 @@ type documentL struct{}
 
 var (
 	documentAllColumns            = []string{"documentid", "subject", "createdat", "username"}
-	documentColumnsWithoutDefault = []string{}
-	documentColumnsWithDefault    = []string{"documentid", "subject", "createdat", "username"}
+	documentColumnsWithoutDefault = []string{"subject"}
+	documentColumnsWithDefault    = []string{"documentid", "createdat", "username"}
 	documentPrimaryKeyColumns     = []string{"documentid"}
 	documentGeneratedColumns      = []string{}
 )
@@ -484,7 +484,7 @@ func (o *Document) DocumentidDocumentitems(mods ...qm.QueryMod) documentItemQuer
 	}
 
 	queryMods = append(queryMods,
-		qm.Where("\"main\".\"documentitem\".\"documentid\"=?", o.DocumentId),
+		qm.Where("\"main\".\"documentitem\".\"documentid\"=?", o.DocumentID),
 	)
 
 	return DocumentItems(queryMods...)
@@ -615,7 +615,7 @@ func (documentL) LoadDocumentidDocumentitems(ctx context.Context, e boil.Context
 		if object.R == nil {
 			object.R = &documentR{}
 		}
-		args = append(args, object.DocumentId)
+		args = append(args, object.DocumentID)
 	} else {
 	Outer:
 		for _, obj := range slice {
@@ -624,12 +624,12 @@ func (documentL) LoadDocumentidDocumentitems(ctx context.Context, e boil.Context
 			}
 
 			for _, a := range args {
-				if queries.Equal(a, obj.DocumentId) {
+				if queries.Equal(a, obj.DocumentID) {
 					continue Outer
 				}
 			}
 
-			args = append(args, obj.DocumentId)
+			args = append(args, obj.DocumentID)
 		}
 	}
 
@@ -682,7 +682,7 @@ func (documentL) LoadDocumentidDocumentitems(ctx context.Context, e boil.Context
 
 	for _, foreign := range resultSlice {
 		for _, local := range slice {
-			if queries.Equal(local.DocumentId, foreign.Documentid) {
+			if queries.Equal(local.DocumentID, foreign.Documentid) {
 				local.R.DocumentidDocumentitems = append(local.R.DocumentidDocumentitems, foreign)
 				if foreign.R == nil {
 					foreign.R = &documentItemR{}
@@ -712,7 +712,7 @@ func (o *Document) SetUsernameUser(ctx context.Context, exec boil.ContextExecuto
 		strmangle.SetParamNames("\"", "\"", 1, []string{"username"}),
 		strmangle.WhereClause("\"", "\"", 2, documentPrimaryKeyColumns),
 	)
-	values := []interface{}{related.Username, o.DocumentId}
+	values := []interface{}{related.Username, o.DocumentID}
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
@@ -784,7 +784,7 @@ func (o *Document) AddDocumentidDocumentitems(ctx context.Context, exec boil.Con
 	var err error
 	for _, rel := range related {
 		if insert {
-			queries.Assign(&rel.Documentid, o.DocumentId)
+			queries.Assign(&rel.Documentid, o.DocumentID)
 			if err = rel.Insert(ctx, exec, boil.Infer()); err != nil {
 				return errors.Wrap(err, "failed to insert into foreign table")
 			}
@@ -794,7 +794,7 @@ func (o *Document) AddDocumentidDocumentitems(ctx context.Context, exec boil.Con
 				strmangle.SetParamNames("\"", "\"", 1, []string{"documentid"}),
 				strmangle.WhereClause("\"", "\"", 2, documentItemPrimaryKeyColumns),
 			)
-			values := []interface{}{o.DocumentId, rel.DocumentItemId}
+			values := []interface{}{o.DocumentID, rel.DocumentItemID}
 
 			if boil.IsDebug(ctx) {
 				writer := boil.DebugWriterFrom(ctx)
@@ -805,7 +805,7 @@ func (o *Document) AddDocumentidDocumentitems(ctx context.Context, exec boil.Con
 				return errors.Wrap(err, "failed to update foreign table")
 			}
 
-			queries.Assign(&rel.Documentid, o.DocumentId)
+			queries.Assign(&rel.Documentid, o.DocumentID)
 		}
 	}
 
@@ -837,7 +837,7 @@ func (o *Document) AddDocumentidDocumentitems(ctx context.Context, exec boil.Con
 // Sets related.R.DocumentidDocument's DocumentidDocumentitems accordingly.
 func (o *Document) SetDocumentidDocumentitems(ctx context.Context, exec boil.ContextExecutor, insert bool, related ...*DocumentItem) error {
 	query := "update \"main\".\"documentitem\" set \"documentid\" = null where \"documentid\" = $1"
-	values := []interface{}{o.DocumentId}
+	values := []interface{}{o.DocumentID}
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
 		fmt.Fprintln(writer, query)
@@ -916,7 +916,7 @@ func Documents(mods ...qm.QueryMod) documentQuery {
 
 // FindDocument retrieves a single record by ID with an executor.
 // If selectCols is empty Find will return all columns.
-func FindDocument(ctx context.Context, exec boil.ContextExecutor, documentId string, selectCols ...string) (*Document, error) {
+func FindDocument(ctx context.Context, exec boil.ContextExecutor, documentID string, selectCols ...string) (*Document, error) {
 	documentObj := &Document{}
 
 	sel := "*"
@@ -927,7 +927,7 @@ func FindDocument(ctx context.Context, exec boil.ContextExecutor, documentId str
 		"select %s from \"main\".\"document\" where \"documentid\"=$1", sel,
 	)
 
-	q := queries.Raw(query, documentId)
+	q := queries.Raw(query, documentID)
 
 	err := q.Bind(ctx, exec, documentObj)
 	if err != nil {
@@ -1376,7 +1376,7 @@ func (o DocumentSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor)
 // Reload refetches the object from the database
 // using the primary keys with an executor.
 func (o *Document) Reload(ctx context.Context, exec boil.ContextExecutor) error {
-	ret, err := FindDocument(ctx, exec, o.DocumentId)
+	ret, err := FindDocument(ctx, exec, o.DocumentID)
 	if err != nil {
 		return err
 	}
@@ -1415,16 +1415,16 @@ func (o *DocumentSlice) ReloadAll(ctx context.Context, exec boil.ContextExecutor
 }
 
 // DocumentExists checks if the Document row exists.
-func DocumentExists(ctx context.Context, exec boil.ContextExecutor, documentId string) (bool, error) {
+func DocumentExists(ctx context.Context, exec boil.ContextExecutor, documentID string) (bool, error) {
 	var exists bool
 	sql := "select exists(select 1 from \"main\".\"document\" where \"documentid\"=$1 limit 1)"
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
 		fmt.Fprintln(writer, sql)
-		fmt.Fprintln(writer, documentId)
+		fmt.Fprintln(writer, documentID)
 	}
-	row := exec.QueryRowContext(ctx, sql, documentId)
+	row := exec.QueryRowContext(ctx, sql, documentID)
 
 	err := row.Scan(&exists)
 	if err != nil {

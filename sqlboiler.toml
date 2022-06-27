@@ -20,7 +20,7 @@ down_plural   = "documentItems"
 down_singular = "documentItem"
 # Columns can also be aliased.
 [aliases.tables.DocumentItem.columns]
-DocumentItemId = "DocumentItemId"
+DocumentItemId = "DocumentItemID"
 CreatedAt="CreatedAt"
 
 
@@ -31,5 +31,5 @@ down_plural   = "documents"
 down_singular = "document"
 # Columns can also be aliased.
 [aliases.tables.Document.columns]
-DocumentId = "DocumentId"
+DocumentId = "DocumentID"
 CreatedAt = "CreatedAt"

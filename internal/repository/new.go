@@ -1,6 +1,9 @@
 package repository
 
-import "s3corp-golang-fresher/internal/models"
+import (
+	"github.com/volatiletech/sqlboiler/v4/queries/qm"
+	"s3corp-golang-fresher/internal/models"
+)
 
 type UserRepo interface {
 	Login(username string) (*models.User, error)
@@ -8,7 +11,7 @@ type UserRepo interface {
 	GetUserByUsername(username string) (*models.User, error)
 
 	// GetUsers Return a user Slice
-	GetUsers() (models.UserSlice, error)
+	GetUsers(queries ...qm.QueryMod) (models.UserSlice, error)
 
 	// CreateUser Insert data by user parameter
 	CreateUser(user models.User) error

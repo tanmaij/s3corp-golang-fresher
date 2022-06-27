@@ -1,64 +1,45 @@
 package service
 
 import (
+	error2 "s3corp-golang-fresher/internal/errors"
 	"s3corp-golang-fresher/internal/models"
-	"s3corp-golang-fresher/utils"
 )
-
-type UserService interface {
-	// Login with username and password
-	Login(username string, password string) (*models.User, utils.Error)
-	// GetUserByUsername Return one user with id parameter
-	GetUserByUsername(username string) (*models.User, utils.Error)
-
-	// GetUsers Return a user Slice
-	GetUsers() (models.UserSlice, utils.Error)
-
-	// CreateUser Insert data by user parameter
-	CreateUser(user models.User) utils.Error
-
-	// UpdateUser Update one record by user parameter
-	UpdateUser(user models.User) utils.Error
-
-	// DeleteUser Delete one record by username parameter
-	DeleteUser(username string) utils.Error
-}
 
 type DocItemService interface {
 
 	// GetDocItemById Return one documentItem with id parameter
-	GetDocItemById(docItemId string) (*models.DocumentItem, utils.Error)
+	GetDocItemById(docItemId string) (*models.DocumentItem, error2.Error)
 
 	// GetDocItems Return a subDocument Slice
-	GetDocItems() (models.DocumentItemSlice, utils.Error)
+	GetDocItems() (models.DocumentItemSlice, error2.Error)
 
 	// CreateDocItem Insert data by documentItem parameter
-	CreateDocItem(docItem models.DocumentItem) utils.Error
+	CreateDocItem(docItem models.DocumentItem) error2.Error
 
 	// UpdateDocItem Update one record by documentItem parameter
-	UpdateDocItem(docItem models.DocumentItem) utils.Error
+	UpdateDocItem(docItem models.DocumentItem) error2.Error
 
 	// DeleteDocItemById DeleteDocById Delete one record by documentItemId parameter
-	DeleteDocItemById(docItemId string) utils.Error
+	DeleteDocItemById(docItemId string) error2.Error
 }
 
 type DocService interface {
 
 	// GetDocById Return one document with id parameter
-	GetDocById(docId string) (*models.Document, utils.Error)
+	GetDocById(docId string) (*models.Document, error2.Error)
 
 	// GetDocs Return a Document Slice
-	GetDocs() (models.DocumentSlice, utils.Error)
+	GetDocs() (models.DocumentSlice, error2.Error)
 
 	// GetDocsByUsername Return all doc of user with id parameter
-	GetDocsByUsername(username string) (models.DocumentSlice, utils.Error)
+	GetDocsByUsername(username string) (models.DocumentSlice, error2.Error)
 
 	// CreateDoc Insert data by document parameter
-	CreateDoc(document models.Document) utils.Error
+	CreateDoc(document models.Document) error2.Error
 
 	// UpdateDoc Update one record by document parameter
-	UpdateDoc(document models.Document) utils.Error
+	UpdateDoc(document models.Document) error2.Error
 
 	// DeleteDocById Delete one record by id parameter
-	DeleteDocById(documentId string) utils.Error
+	DeleteDocById(documentId string) error2.Error
 }

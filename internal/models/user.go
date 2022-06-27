@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"github.com/friendsofgo/errors"
-	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
@@ -24,10 +23,10 @@ import (
 
 // User is an object representing the database table.
 type User struct {
-	Username string      `boil:"username" json:"username" toml:"username" yaml:"username"`
-	Password null.String `boil:"password" json:"password,omitempty" toml:"password" yaml:"password,omitempty"`
-	Email    null.String `boil:"email" json:"email,omitempty" toml:"email" yaml:"email,omitempty"`
-	Name     null.String `boil:"name" json:"name,omitempty" toml:"name" yaml:"name,omitempty"`
+	Username string `boil:"username" json:"username" toml:"username" yaml:"username"`
+	Password string `boil:"password" json:"password" toml:"password" yaml:"password"`
+	Email    string `boil:"email" json:"email" toml:"email" yaml:"email"`
+	Name     string `boil:"name" json:"name" toml:"name" yaml:"name"`
 
 	R *userR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L userL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -61,14 +60,14 @@ var UserTableColumns = struct {
 
 var UserWhere = struct {
 	Username whereHelperstring
-	Password whereHelpernull_String
-	Email    whereHelpernull_String
-	Name     whereHelpernull_String
+	Password whereHelperstring
+	Email    whereHelperstring
+	Name     whereHelperstring
 }{
 	Username: whereHelperstring{field: "\"main\".\"user\".\"username\""},
-	Password: whereHelpernull_String{field: "\"main\".\"user\".\"password\""},
-	Email:    whereHelpernull_String{field: "\"main\".\"user\".\"email\""},
-	Name:     whereHelpernull_String{field: "\"main\".\"user\".\"name\""},
+	Password: whereHelperstring{field: "\"main\".\"user\".\"password\""},
+	Email:    whereHelperstring{field: "\"main\".\"user\".\"email\""},
+	Name:     whereHelperstring{field: "\"main\".\"user\".\"name\""},
 }
 
 // UserRels is where relationship names are stored.
@@ -100,8 +99,8 @@ type userL struct{}
 
 var (
 	userAllColumns            = []string{"username", "password", "email", "name"}
-	userColumnsWithoutDefault = []string{"username"}
-	userColumnsWithDefault    = []string{"password", "email", "name"}
+	userColumnsWithoutDefault = []string{"username", "password", "email", "name"}
+	userColumnsWithDefault    = []string{}
 	userPrimaryKeyColumns     = []string{"username"}
 	userGeneratedColumns      = []string{}
 )
@@ -514,7 +513,7 @@ func (o *User) AddUsernameDocuments(ctx context.Context, exec boil.ContextExecut
 				strmangle.SetParamNames("\"", "\"", 1, []string{"username"}),
 				strmangle.WhereClause("\"", "\"", 2, documentPrimaryKeyColumns),
 			)
-			values := []interface{}{o.Username, rel.DocumentId}
+			values := []interface{}{o.Username, rel.DocumentID}
 
 			if boil.IsDebug(ctx) {
 				writer := boil.DebugWriterFrom(ctx)

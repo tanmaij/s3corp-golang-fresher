@@ -24,10 +24,10 @@ import (
 
 // DocumentItem is an object representing the database table.
 type DocumentItem struct {
-	DocumentItemId string      `boil:"documentitemid" json:"documentitemid" toml:"documentitemid" yaml:"documentitemid"`
-	Title          null.String `boil:"title" json:"title,omitempty" toml:"title" yaml:"title,omitempty"`
+	DocumentItemID string      `boil:"documentitemid" json:"documentitemid" toml:"documentitemid" yaml:"documentitemid"`
+	Title          string      `boil:"title" json:"title" toml:"title" yaml:"title"`
 	CreatedAt      null.Time   `boil:"createdat" json:"createdat,omitempty" toml:"createdat" yaml:"createdat,omitempty"`
-	Content        null.String `boil:"content" json:"content,omitempty" toml:"content" yaml:"content,omitempty"`
+	Content        string      `boil:"content" json:"content" toml:"content" yaml:"content"`
 	Documentid     null.String `boil:"documentid" json:"documentid,omitempty" toml:"documentid" yaml:"documentid,omitempty"`
 
 	R *documentItemR `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -35,13 +35,13 @@ type DocumentItem struct {
 }
 
 var DocumentItemColumns = struct {
-	DocumentItemId string
+	DocumentItemID string
 	Title          string
 	CreatedAt      string
 	Content        string
 	Documentid     string
 }{
-	DocumentItemId: "documentitemid",
+	DocumentItemID: "documentitemid",
 	Title:          "title",
 	CreatedAt:      "createdat",
 	Content:        "content",
@@ -49,13 +49,13 @@ var DocumentItemColumns = struct {
 }
 
 var DocumentItemTableColumns = struct {
-	DocumentItemId string
+	DocumentItemID string
 	Title          string
 	CreatedAt      string
 	Content        string
 	Documentid     string
 }{
-	DocumentItemId: "documentitem.documentitemid",
+	DocumentItemID: "documentitem.documentitemid",
 	Title:          "documentitem.title",
 	CreatedAt:      "documentitem.createdat",
 	Content:        "documentitem.content",
@@ -65,16 +65,16 @@ var DocumentItemTableColumns = struct {
 // Generated where
 
 var DocumentItemWhere = struct {
-	DocumentItemId whereHelperstring
-	Title          whereHelpernull_String
+	DocumentItemID whereHelperstring
+	Title          whereHelperstring
 	CreatedAt      whereHelpernull_Time
-	Content        whereHelpernull_String
+	Content        whereHelperstring
 	Documentid     whereHelpernull_String
 }{
-	DocumentItemId: whereHelperstring{field: "\"main\".\"documentitem\".\"documentitemid\""},
-	Title:          whereHelpernull_String{field: "\"main\".\"documentitem\".\"title\""},
+	DocumentItemID: whereHelperstring{field: "\"main\".\"documentitem\".\"documentitemid\""},
+	Title:          whereHelperstring{field: "\"main\".\"documentitem\".\"title\""},
 	CreatedAt:      whereHelpernull_Time{field: "\"main\".\"documentitem\".\"createdat\""},
-	Content:        whereHelpernull_String{field: "\"main\".\"documentitem\".\"content\""},
+	Content:        whereHelperstring{field: "\"main\".\"documentitem\".\"content\""},
 	Documentid:     whereHelpernull_String{field: "\"main\".\"documentitem\".\"documentid\""},
 }
 
@@ -107,8 +107,8 @@ type documentItemL struct{}
 
 var (
 	documentItemAllColumns            = []string{"documentitemid", "title", "createdat", "content", "documentid"}
-	documentItemColumnsWithoutDefault = []string{}
-	documentItemColumnsWithDefault    = []string{"documentitemid", "title", "createdat", "content", "documentid"}
+	documentItemColumnsWithoutDefault = []string{"title", "content"}
+	documentItemColumnsWithDefault    = []string{"documentitemid", "createdat", "documentid"}
 	documentItemPrimaryKeyColumns     = []string{"documentitemid"}
 	documentItemGeneratedColumns      = []string{}
 )
@@ -496,7 +496,7 @@ func (documentItemL) LoadDocumentidDocument(ctx context.Context, e boil.ContextE
 
 	for _, local := range slice {
 		for _, foreign := range resultSlice {
-			if queries.Equal(local.Documentid, foreign.DocumentId) {
+			if queries.Equal(local.Documentid, foreign.DocumentID) {
 				local.R.DocumentidDocument = foreign
 				if foreign.R == nil {
 					foreign.R = &documentR{}
@@ -526,7 +526,7 @@ func (o *DocumentItem) SetDocumentidDocument(ctx context.Context, exec boil.Cont
 		strmangle.SetParamNames("\"", "\"", 1, []string{"documentid"}),
 		strmangle.WhereClause("\"", "\"", 2, documentItemPrimaryKeyColumns),
 	)
-	values := []interface{}{related.DocumentId, o.DocumentItemId}
+	values := []interface{}{related.DocumentID, o.DocumentItemID}
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
@@ -537,7 +537,7 @@ func (o *DocumentItem) SetDocumentidDocument(ctx context.Context, exec boil.Cont
 		return errors.Wrap(err, "failed to update local table")
 	}
 
-	queries.Assign(&o.Documentid, related.DocumentId)
+	queries.Assign(&o.Documentid, related.DocumentID)
 	if o.R == nil {
 		o.R = &documentItemR{
 			DocumentidDocument: related,
@@ -603,7 +603,7 @@ func DocumentItems(mods ...qm.QueryMod) documentItemQuery {
 
 // FindDocumentItem retrieves a single record by ID with an executor.
 // If selectCols is empty Find will return all columns.
-func FindDocumentItem(ctx context.Context, exec boil.ContextExecutor, documentItemId string, selectCols ...string) (*DocumentItem, error) {
+func FindDocumentItem(ctx context.Context, exec boil.ContextExecutor, documentItemID string, selectCols ...string) (*DocumentItem, error) {
 	documentItemObj := &DocumentItem{}
 
 	sel := "*"
@@ -614,7 +614,7 @@ func FindDocumentItem(ctx context.Context, exec boil.ContextExecutor, documentIt
 		"select %s from \"main\".\"documentitem\" where \"documentitemid\"=$1", sel,
 	)
 
-	q := queries.Raw(query, documentItemId)
+	q := queries.Raw(query, documentItemID)
 
 	err := q.Bind(ctx, exec, documentItemObj)
 	if err != nil {
@@ -1063,7 +1063,7 @@ func (o DocumentItemSlice) DeleteAll(ctx context.Context, exec boil.ContextExecu
 // Reload refetches the object from the database
 // using the primary keys with an executor.
 func (o *DocumentItem) Reload(ctx context.Context, exec boil.ContextExecutor) error {
-	ret, err := FindDocumentItem(ctx, exec, o.DocumentItemId)
+	ret, err := FindDocumentItem(ctx, exec, o.DocumentItemID)
 	if err != nil {
 		return err
 	}
@@ -1102,16 +1102,16 @@ func (o *DocumentItemSlice) ReloadAll(ctx context.Context, exec boil.ContextExec
 }
 
 // DocumentItemExists checks if the DocumentItem row exists.
-func DocumentItemExists(ctx context.Context, exec boil.ContextExecutor, documentItemId string) (bool, error) {
+func DocumentItemExists(ctx context.Context, exec boil.ContextExecutor, documentItemID string) (bool, error) {
 	var exists bool
 	sql := "select exists(select 1 from \"main\".\"documentitem\" where \"documentitemid\"=$1 limit 1)"
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
 		fmt.Fprintln(writer, sql)
-		fmt.Fprintln(writer, documentItemId)
+		fmt.Fprintln(writer, documentItemID)
 	}
-	row := exec.QueryRowContext(ctx, sql, documentItemId)
+	row := exec.QueryRowContext(ctx, sql, documentItemID)
 
 	err := row.Scan(&exists)
 	if err != nil {
