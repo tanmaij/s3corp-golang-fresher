@@ -1,0 +1,20 @@
+{
+    "users":[
+        {
+            "username": "mai",
+            "email": "mai@gmail.com",
+            "name": "Mãi"
+        },
+        {
+            "username": "thien",
+            "email": "thien@gmail.com",
+            "name": "thien"
+        }
+    ],
+    "pagination": {
+        "totalPages": 3,
+        "totalRows": 5,
+        "page": 2,
+        "limit": 2
+    }
+}

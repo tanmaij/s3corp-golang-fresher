@@ -4,10 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/go-chi/chi/v5"
+	"log"
 	"net/http"
+	"s3corp-golang-fresher/internal/errors"
 	"s3corp-golang-fresher/internal/models"
 	"s3corp-golang-fresher/internal/service"
-	"s3corp-golang-fresher/utils"
+	"strconv"
 	"strings"
 )
 
@@ -40,32 +42,40 @@ func (userHandler UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 	// 1. Define a variable name requestBody
 	// Decode data from r.Body to the variable
 	requestBody := make(map[string]interface{})
-	json.NewDecoder(r.Body).Decode(&requestBody)
+	if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
+		http.Error(w, errors.InvalidData, http.StatusBadRequest)
+		return
+	}
 
 	// 2. Checking username and password variable from request
 	// If not true, response status 400, and message
 	username, ok := requestBody["username"]
 	if !ok {
-		http.Error(w, "Username is NOT FOUND", http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprint(w, errors.UsernameIsNotFound)
 		return
 	}
 	password, ok := requestBody["password"]
 	if !ok {
-		http.Error(w, "Password is NOT FOUND", http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprint(w, errors.PasswordIsNotFound)
 		return
 	}
 
 	// 3. Call Login method from UserService, get user information, token and error
 	// if error, response error which returned by service
 	user, token, err := userHandler.UserService.Login(username.(string), password.(string))
-	if err.StatusCode != http.StatusOK {
-		err.Response(w)
+	if err != nil {
+		err.(errors.Error).Response(w)
 		return
 	}
 
 	// 4. If not error, response user information and token
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(utils.Response{Success: true, Data: map[string]any{"user": user, "token": token}})
+	if err := json.NewEncoder(w).Encode(map[string]any{"user": user, "token": token}); err != nil {
+		log.Fatalln("response data invalid")
+		return
+	}
 }
 
 func (userHandler UserHandler) GetUserByUsername(w http.ResponseWriter, r *http.Request) {
@@ -73,25 +83,42 @@ func (userHandler UserHandler) GetUserByUsername(w http.ResponseWriter, r *http.
 
 	user, err := userHandler.UserService.GetUserByUsername(username)
 
-	if err.StatusCode != http.StatusOK {
-		err.Response(w)
+	if err != nil {
+		err.(errors.Error).Response(w)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(utils.Response{Success: true, Data: user})
+	json.NewEncoder(w).Encode(user)
 }
 
 func (userHandler UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
-	users, pagination, err := userHandler.UserService.GetUsers(map[string]string{})
 
-	if err.StatusCode != http.StatusOK {
-		err.Response(w)
+	// 1. Get limit and page variable from url Query
+	limit := r.URL.Query().Get("limit")
+	page := r.URL.Query().Get("page")
+
+	//Check limit and page is unsigned int
+	_limit, err := strconv.Atoi(limit)
+	_page, err := strconv.Atoi(page)
+	if err != nil || _limit <= 0 || _page <= 0 {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprint(w, errors.InvalidData)
 		return
 	}
 
+	// 2. Call get users method from user service with limit and page variable
+	users, pagination, err := userHandler.UserService.GetUsers(map[string]int{"limit": _limit, "page": _page})
+
+	// if any error, response to client
+	if err != nil {
+		err.(errors.Error).Response(w)
+		return
+	}
+
+	// 3. If not error, response data that include user and pagination
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(utils.Response{Success: true, Data: map[string]any{"users": users, "pagination": pagination}})
+	json.NewEncoder(w).Encode(map[string]any{"users": users, "pagination": pagination})
 }
 
 func (userHandler UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
@@ -99,32 +126,35 @@ func (userHandler UserHandler) CreateUser(w http.ResponseWriter, r *http.Request
 	// 1. Define a variable name requestBody
 	// Decode data from r.Body to the variable
 	requestBody := make(map[string]interface{})
-	json.NewDecoder(r.Body).Decode(&requestBody)
+	if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
+		http.Error(w, errors.InvalidData, http.StatusBadRequest)
+		return
+	}
 
 	// 2. Checking username,name,email and password variable from request
 	// If not true, response status 400, and message
 	username, ok := requestBody["username"]
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, "Username is not found")
+		fmt.Fprint(w, errors.UsernameIsNotFound)
 		return
 	}
 	password, ok := requestBody["password"]
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, "Password is not found")
+		fmt.Fprint(w, errors.PasswordIsNotFound)
 		return
 	}
 	name, ok := requestBody["name"]
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, "Name is not found")
+		fmt.Fprint(w, errors.NameIsNotFound)
 		return
 	}
 	email, ok := requestBody["email"]
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, "Email is not found")
+		fmt.Fprint(w, errors.EmailIsNotFound)
 		return
 	}
 
@@ -133,7 +163,7 @@ func (userHandler UserHandler) CreateUser(w http.ResponseWriter, r *http.Request
 	// Or if it contains more than 2 '@' character, response status 400, and message
 	if !strings.Contains(email.(string), "@") || strings.Count(email.(string), "@") > 1 {
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, "Email is not correct")
+		fmt.Fprint(w, errors.InvalidEmail)
 		return
 	}
 
@@ -146,14 +176,14 @@ func (userHandler UserHandler) CreateUser(w http.ResponseWriter, r *http.Request
 	// 4. Call createUser method from user service with user which is just defined
 	// If service return any error , response the error to client
 	err := userHandler.UserService.CreateUser(newUser)
-	if err.StatusCode != http.StatusOK {
-		err.Response(w)
+	if err != nil {
+		err.(errors.Error).Response(w)
 		return
 	}
 
 	// 4. If not error, response successfully message
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(utils.Response{Success: true, Data: "Create user successfully"})
+	w.Write([]byte("Create user successfully"))
 }
 
 func (userHandler UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
@@ -165,24 +195,24 @@ func (userHandler UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request
 	password, ok := user["password"]
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(utils.Response{Data: "Password is NOT FOUND"})
+		fmt.Fprint(w, "Password is NOT FOUND")
 		return
 	}
 	name, ok := user["name"]
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(utils.Response{Data: "Name is NOT FOUND"})
+		fmt.Fprint(w, "Name is NOT FOUND")
 		return
 	}
 	email, ok := user["email"]
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(utils.Response{Data: "Email is NOT FOUND"})
+		fmt.Fprint(w, "Email is NOT FOUND")
 		return
 	}
 	if !strings.Contains(email.(string), "@") || strings.Count(email.(string), "@") > 1 {
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(utils.Response{Data: "Email is NOT CORRECT"})
+		fmt.Fprint(w, errors.InvalidEmail)
 		return
 	}
 	newUser := models.User{
@@ -192,13 +222,13 @@ func (userHandler UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request
 		Name:     name.(string)}
 	err := userHandler.UserService.UpdateUser(newUser)
 
-	if err.StatusCode != http.StatusOK {
-		err.Response(w)
+	if err != nil {
+		err.(errors.Error).Response(w)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(utils.Response{Success: true, Data: "Update user successfully"})
+	w.Write([]byte("Update user successfully"))
 }
 
 func (userHandler UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
@@ -207,12 +237,11 @@ func (userHandler UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request
 
 	err := userHandler.UserService.DeleteUser(username)
 
-	if err.StatusCode != http.StatusOK {
-		err.Response(w)
+	if err != nil {
+		err.(errors.Error).Response(w)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(utils.Response{Success: true, Data: "Update user successfully"})
-
+	w.Write([]byte("Delete user successfully"))
 }

@@ -17,13 +17,22 @@ func (error Error) Response(w http.ResponseWriter) {
 func NewError(message string, statusCode int) Error {
 	return Error{message, statusCode}
 }
+func (error Error) Error() string {
+	return error.Message
+}
 
 const (
+	InvalidData         = "invalid Data"
 	UserAlreadyExist    = "user already exist"
 	PasswordIsIncorrect = "password is incorrect"
 	Successfully        = "Successfully"
 	InternalServerError = "internal Server Error"
 	NotExist            = "Not exist"
 	QueryDataIncorrect  = "Query data is incorrect"
-	NotFound            = "not Found"
+	NotFound            = "not found"
+	InvalidEmail        = "invalid Email"
+	UsernameIsNotFound  = "username is not found"
+	PasswordIsNotFound  = "username is not found"
+	EmailIsNotFound     = "email is not found"
+	NameIsNotFound      = "name is not found"
 )
