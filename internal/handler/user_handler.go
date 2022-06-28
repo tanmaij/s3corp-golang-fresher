@@ -89,7 +89,11 @@ func (userHandler UserHandler) GetUserByUsername(w http.ResponseWriter, r *http.
 	}
 
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(user)
+
+	if err := json.NewEncoder(w).Encode(user); err != nil {
+		log.Fatalln("response data invalid")
+		return
+	}
 }
 
 func (userHandler UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
@@ -118,7 +122,10 @@ func (userHandler UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) 
 
 	// 3. If not error, response data that include user and pagination
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]any{"users": users, "pagination": pagination})
+	if err := json.NewEncoder(w).Encode(map[string]any{"users": users, "pagination": pagination}); err != nil {
+		log.Fatalln("response data invalid")
+		return
+	}
 }
 
 func (userHandler UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {

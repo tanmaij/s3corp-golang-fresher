@@ -27,7 +27,7 @@ const (
 	PasswordIsIncorrect = "password is incorrect"
 	Successfully        = "Successfully"
 	InternalServerError = "internal Server Error"
-	NotExist            = "Not exist"
+	NotExist            = "not exist"
 	QueryDataIncorrect  = "Query data is incorrect"
 	NotFound            = "not found"
 	InvalidEmail        = "invalid Email"

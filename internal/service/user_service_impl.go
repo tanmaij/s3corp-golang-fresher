@@ -115,12 +115,14 @@ func (userServiceImpl UserServiceImpl) UpdateUser(user models.User) error {
 }
 
 func (userServiceImpl UserServiceImpl) DeleteUser(username string) error {
+	// number of Affected rows
 	affectedRows, err := userServiceImpl.UserRepo.DeleteUser(username)
+	//if Affected rows < 0 , return not exist error
 	if affectedRows <= 0 {
 		return errors.NewError(errors.NotExist, http.StatusNotFound)
 	}
 	if err != nil {
 		return errors.NewError(errors.InternalServerError, http.StatusInternalServerError)
 	}
-	return errors.NewError(errors.Successfully, http.StatusOK)
+	return nil
 }

@@ -24,7 +24,7 @@ func (m *UserServiceMock) DeleteUser(username string) error {
 
 	args := m.Called(username)
 
-	return args.Get(0).(error)
+	return args.Error(0)
 }
 
 // GetUserByUsername provides a mock function with given fields: username
