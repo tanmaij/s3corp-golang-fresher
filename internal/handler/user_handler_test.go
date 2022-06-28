@@ -12,6 +12,7 @@ import (
 	"net/http/httptest"
 	"os"
 	errors "s3corp-golang-fresher/internal/errors"
+	"s3corp-golang-fresher/internal/handler/test_data/fake_data"
 	"s3corp-golang-fresher/internal/models"
 	"s3corp-golang-fresher/internal/service/mocks"
 	"s3corp-golang-fresher/utils"
@@ -48,17 +49,26 @@ func TestUserHandler_Login(t *testing.T) {
 	userServiceMock := new(mocks.UserServiceMock)
 	userHandler = NewUserHandler(userServiceMock)
 
+	// Define struct is the same type login handler's response
+	type LoginResponse struct {
+		User  models.User `json:"user"`
+		Token string      `json:"token"`
+	}
+
 	tcs := map[string]struct {
 		input     string
 		expResult string
 		expStatus int
 		expErr    error
+		givenData LoginResponse
 	}{
 		"success": {
 			input:     "test_data/user_handler/request/login_success.json",
 			expResult: "test_data/user_handler/response/login_success.json",
 			expStatus: http.StatusOK,
-			expErr:    nil},
+			expErr:    nil,
+			givenData: LoginResponse{User: fake_data.UserLogin, Token: fake_data.TokenLogin},
+		},
 		"password_is_incorrect": {
 			input:     "test_data/user_handler/request/login_password_is_incorrect.json",
 			expStatus: http.StatusUnauthorized,
@@ -67,12 +77,6 @@ func TestUserHandler_Login(t *testing.T) {
 			input:     "test_data/user_handler/request/login_not_found.json",
 			expStatus: http.StatusNotFound,
 			expErr:    errors.NewError(errors.NotFound, http.StatusNotFound)},
-	}
-
-	// Define struct is the same type login handler's response
-	type LoginResponse struct {
-		User  models.User `json:"user"`
-		Token string      `json:"token"`
 	}
 
 	for desc, tc := range tcs {
@@ -103,7 +107,7 @@ func TestUserHandler_Login(t *testing.T) {
 			}
 
 			// Set up data will be return if method Login is called
-			userServiceMock.On("Login", testUser.Username, testUser.Password).Return(response.User, response.Token, tc.expErr)
+			userServiceMock.On("Login", testUser.Username, testUser.Password).Return(tc.givenData.User, tc.givenData.Token, tc.expErr)
 
 			// Define http test request with post method and body (from input)
 			r := httptest.NewRequest(http.MethodPost, url+"login", bytes.NewBuffer(input))
