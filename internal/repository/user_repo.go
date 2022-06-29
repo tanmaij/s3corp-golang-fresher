@@ -22,4 +22,6 @@ type UserRepo interface {
 	DeleteUser(username string) (int64, error)
 
 	GetByUsernameOrEmail(username string, email string) (*models.User, error)
+
+	GetUsersByYear(year int) (models.UserSlice, error)
 }

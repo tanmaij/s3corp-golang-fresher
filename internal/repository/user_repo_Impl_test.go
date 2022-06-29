@@ -14,5 +14,6 @@ func TestUser_DeleteUser(t *testing.T) {
 }
 func TestUserRepo_GetUsers(t *testing.T) {
 }
-func TestUserRepo_Login(t *testing.T) {
+func TestUserRepo_GetUserByYear(t *testing.T) {
+
 }

@@ -44,3 +44,6 @@ func (userRepoImpl UserRepoImpl) DeleteUser(username string) (int64, error) {
 func (userRepoImpl UserRepoImpl) GetByUsernameOrEmail(username string, email string) (*models.User, error) {
 	return models.Users(qm.Or2(qm.Where("username=?", username)), qm.Or2(qm.Where("email=?", email))).One(context.Background(), userRepoImpl.db)
 }
+func (userRepoImpl UserRepoImpl) GetUsersByYear(year int) (models.UserSlice, error) {
+	return models.Users(qm.Where("DATE_PART('year', createdat::date)=?", year)).All(context.Background(), userRepoImpl.db)
+}

@@ -127,11 +127,40 @@ func (userServiceImpl UserServiceImpl) DeleteUser(username string) error {
 	return nil
 }
 func (userServiceImpl UserServiceImpl) UsersStatsCSVFile(year int) ([]byte, error) {
-	_, err := userServiceImpl.UserRepo.GetUsers()
+
+	// Result to return
+	var byteResult []byte
+	// Write header rows
+	byteResult = append(byteResult, []byte("USERNAME,NAME,EMAIL,CREATED AT\n")...)
+	//Get data from repo
+	users, err := userServiceImpl.UserRepo.GetUsersByYear(year)
 
 	if err != nil {
 		return nil, errors.NewError(errors.InternalServerError, http.StatusInternalServerError)
 	}
 
-	return nil, nil
+	// Define worker to handle some user data
+	var worker = func(users models.UserSlice, b chan<- []byte) {
+		for _, v := range users {
+			b <- []byte(v.Username + "," + v.Name + "," + v.Email + "," + v.CreatedAt.String() + "\n") // One rows
+		}
+	}
+
+	numUser := len(users)                             // Number of data
+	numWorker := 5                                    // Number of worker
+	bytesChan := make(chan []byte, numUser/numWorker) // Channel
+
+	for i := 0; i < numWorker; i++ {
+		// index and last index to slice
+		start := i * (len(users) / numWorker)
+		end := (i + 1) * (len(users) / numWorker)
+		// start goroutine
+		go worker(users[start:end], bytesChan)
+	}
+
+	for i := 0; i < len(users); i++ {
+		byteResult = append(byteResult, <-bytesChan...) // Write one row into the result
+	}
+
+	return byteResult, nil
 }
