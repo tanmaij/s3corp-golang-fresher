@@ -14,7 +14,7 @@ type UserService interface {
 	GetUserByUsername(username string) (models.User, error)
 
 	// GetUsers Return a user Slice
-	GetUsers(queriesParams map[string]int) (models.UserSlice, utils.Pagination, error)
+	GetUsers(queriesParams map[string]int) ([]models.User, utils.Pagination, error)
 
 	// CreateUser Insert data by user parameter
 	CreateUser(user models.User) error

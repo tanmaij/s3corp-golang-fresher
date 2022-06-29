@@ -54,31 +54,31 @@ func (userServiceImpl UserServiceImpl) GetUserByUsername(username string) (model
 	return *user, errors.NewError(errors.Successfully, http.StatusOK)
 }
 
-func (userServiceImpl UserServiceImpl) GetUsers(queriesParams map[string]int) (models.UserSlice, utils.Pagination, error) {
+func (userServiceImpl UserServiceImpl) GetUsers(queriesParams map[string]int) ([]models.User, utils.Pagination, error) {
 
-	limit := queriesParams["limit"]
-	page := queriesParams["page"]
+	//limit := queriesParams["limit"]
+	//page := queriesParams["page"]
 
-	users, err := userServiceImpl.UserRepo.GetUsers()
+	_, err := userServiceImpl.UserRepo.GetUsers()
 
 	if err != nil {
-		return users,
+		return []models.User{},
 			utils.Pagination{}, errors.NewError(errors.InternalServerError, http.StatusInternalServerError)
 	}
 
-	skip := (page - 1) * limit
-	get := (page-1)*limit + limit
-	totalRows := len(users)
-	totalPages := totalRows / limit
+	//skip := (page - 1) * limit
+	//get := (page-1)*limit + limit
+	//totalRows := len(users)
+	//totalPages := totalRows / limit
+	//
+	//if totalRows%limit == 0 {
+	//	totalPages++
+	//}
+	//
+	//users = users[skip:get]
 
-	if totalRows%limit == 0 {
-		totalPages++
-	}
-
-	users = users[skip:get]
-
-	return users,
-		utils.NewPagination(totalPages, limit, page, totalRows), nil
+	return []models.User{},
+		utils.Pagination{}, nil
 }
 
 func (userServiceImpl UserServiceImpl) CreateUser(user models.User) error {

@@ -11,7 +11,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	errors "s3corp-golang-fresher/internal/errors"
+	"s3corp-golang-fresher/internal/errors"
 	"s3corp-golang-fresher/internal/handler/test_data/fake_data"
 	"s3corp-golang-fresher/internal/models"
 	"s3corp-golang-fresher/internal/service/mocks"
@@ -55,28 +55,39 @@ func TestUserHandler_Login(t *testing.T) {
 		Token string      `json:"token"`
 	}
 
+	// Define struct  which is return by user service login
+	type GivenData struct {
+		User  models.User
+		Token string
+		Error error
+	}
+
 	tcs := map[string]struct {
 		input     string
 		expResult string
 		expStatus int
 		expErr    error
-		givenData LoginResponse
+		givenData GivenData
 	}{
 		"success": {
 			input:     "test_data/user_handler/request/login_success.json",
 			expResult: "test_data/user_handler/response/login_success.json",
 			expStatus: http.StatusOK,
 			expErr:    nil,
-			givenData: LoginResponse{User: fake_data.UserLogin, Token: fake_data.TokenLogin},
+			givenData: GivenData{User: fake_data.UserLogin, Token: fake_data.TokenLogin, Error: nil},
 		},
 		"password_is_incorrect": {
 			input:     "test_data/user_handler/request/login_password_is_incorrect.json",
 			expStatus: http.StatusUnauthorized,
-			expErr:    errors.NewError(errors.PasswordIsIncorrect, http.StatusUnauthorized)},
+			expErr:    errors.NewError(errors.PasswordIsIncorrect, http.StatusUnauthorized),
+			givenData: GivenData{Error: errors.NewError(errors.PasswordIsIncorrect, http.StatusUnauthorized)},
+		},
 		"not_found": {
 			input:     "test_data/user_handler/request/login_not_found.json",
 			expStatus: http.StatusNotFound,
-			expErr:    errors.NewError(errors.NotFound, http.StatusNotFound)},
+			expErr:    errors.NewError(errors.NotFound, http.StatusNotFound),
+			givenData: GivenData{Error: errors.NewError(errors.NotFound, http.StatusNotFound)},
+		},
 	}
 
 	for desc, tc := range tcs {
@@ -107,7 +118,7 @@ func TestUserHandler_Login(t *testing.T) {
 			}
 
 			// Set up data will be return if method Login is called
-			userServiceMock.On("Login", testUser.Username, testUser.Password).Return(tc.givenData.User, tc.givenData.Token, tc.expErr)
+			userServiceMock.On("Login", testUser.Username, testUser.Password).Return(tc.givenData.User, tc.givenData.Token, tc.givenData.Error)
 
 			// Define http test request with post method and body (from input)
 			r := httptest.NewRequest(http.MethodPost, url+"login", bytes.NewBuffer(input))
@@ -229,8 +240,14 @@ func TestUserHandler_GetUsers(t *testing.T) {
 
 	// define struct for get user response
 	type GetUserResponse struct {
-		pagination utils.Pagination `json:"pagination"`
-		users      models.UserSlice `json:"users"`
+		Pagination utils.Pagination `json:"pagination"`
+		Users      []models.User    `json:"users"`
+	}
+	// define struct for user service mock return
+	type GivenData struct {
+		Pagination utils.Pagination
+		Users      []models.User
+		Error      error
 	}
 
 	tcs := map[string]struct {
@@ -238,12 +255,14 @@ func TestUserHandler_GetUsers(t *testing.T) {
 		expResult string
 		expStatus int
 		expErr    error
+		givenData GivenData
 	}{
 		"success": {
 			input:     utils.Pagination{Page: 2, Limit: 2},
 			expResult: "test_data/user_handler/response/get_users_success.json",
 			expStatus: http.StatusOK,
 			expErr:    nil,
+			givenData: GivenData{Users: fake_data.UserSlice, Pagination: fake_data.Pagination, Error: nil},
 		},
 		"invalid_data": {
 			input:     utils.Pagination{Page: 2, Limit: -2},
@@ -267,7 +286,7 @@ func TestUserHandler_GetUsers(t *testing.T) {
 			}
 
 			// Set up data will be return if method GetUsers is called(with some different arguments)
-			userServiceMock.On("GetUsers", map[string]int{"limit": tc.input.Limit, "page": tc.input.Page}).Return(expResponse.users, expResponse.pagination, nil)
+			userServiceMock.On("GetUsers", map[string]int{"limit": tc.input.Limit, "page": tc.input.Page}).Return(tc.givenData.Users, tc.givenData.Pagination, tc.givenData.Error)
 
 			// define request for test
 			r := httptest.NewRequest(http.MethodGet, url, nil)

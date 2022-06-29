@@ -37,17 +37,17 @@ func (m *UserServiceMock) GetUserByUsername(username string) (models.User, error
 }
 
 // GetUsers provides a mock function with given fields: queriesParams
-func (m *UserServiceMock) GetUsers(queriesParams map[string]int) (models.UserSlice, utils.Pagination, error) {
+func (m *UserServiceMock) GetUsers(queriesParams map[string]int) ([]models.User, utils.Pagination, error) {
 
 	args := m.Called(queriesParams)
 
-	userSlice := args.Get(0).(models.UserSlice)
+	users := args.Get(0).([]models.User)
 
-	if len(userSlice) == 0 {
-		userSlice = []*models.User{}
+	if len(users) == 0 {
+		users = []models.User{}
 	}
 
-	return userSlice, args.Get(1).(utils.Pagination), args.Error(2)
+	return users, args.Get(1).(utils.Pagination), args.Error(2)
 
 }
 
