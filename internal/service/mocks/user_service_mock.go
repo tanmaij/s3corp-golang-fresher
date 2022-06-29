@@ -65,7 +65,7 @@ func (m *UserServiceMock) UpdateUser(user models.User) error {
 
 	args := m.Called(user)
 
-	return args.Get(0).(error)
+	return args.Error(0)
 
 }
 func (m *UserServiceMock) UsersStatsCSVFile(year int) ([]byte, error) {

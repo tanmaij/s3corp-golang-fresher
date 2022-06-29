@@ -388,7 +388,80 @@ func TestUserHandler_DeleteUser(t *testing.T) {
 	}
 }
 
-func TestMain(m *testing.M) {
+func TestUserHandler_UpdateUser(t *testing.T) {
+	// 1. Create new user service mock for test
+	// Create new user handler with user service mock
+	userServiceMock := new(mocks.UserServiceMock)
+	userHandler = NewUserHandler(userServiceMock)
 
-	m.Run()
+	type InputType struct {
+		Username string
+		Body     string
+	}
+
+	tcs := map[string]struct {
+		input     InputType
+		expResult string
+		expStatus int
+		expErr    error
+	}{
+		"success": {
+			input:     InputType{"mai", "test_data/user_handler/request/update_user_success.json"},
+			expResult: "Update user successfully",
+			expStatus: http.StatusOK,
+		},
+		"not_found": {
+			input:     InputType{"mai2", "test_data/user_handler/request/update_user_not_found.json"},
+			expResult: "",
+			expStatus: http.StatusNotFound,
+			expErr:    errors.NewError(errors.NotFound, http.StatusNotFound),
+		},
+	}
+
+	for desc, tc := range tcs {
+		t.Run(desc, func(t *testing.T) {
+
+			// Given
+			input, err := readJsonFile(tc.input.Body) // Get input data from json file
+			if err != nil {
+				t.Error("Error on reading the input file")
+			}
+
+			// Define user testUser for test (from input)
+			var testUser models.User
+			testUser.Username = tc.input.Username                    // Set username for user service argument
+			if err := json.Unmarshal(input, &testUser); err != nil { // Set data for user service argument
+				t.Error("Error on reading the input file")
+			}
+
+			// Set up data will be return if method DeleteUser is called
+			userServiceMock.On("UpdateUser", testUser).Return(tc.expErr)
+
+			// Define http test request
+			r := httptest.NewRequest(http.MethodPut, url+tc.input.Username, bytes.NewBuffer(input))
+			// Define http test response
+			w := httptest.NewRecorder()
+			// Init chi route context
+			rctx := chi.NewRouteContext()
+			// Set username to chi route context
+			rctx.URLParams.Add("username", tc.input.Username)
+			// Add chi route context to request
+			r = r.WithContext(context.WithValue(r.Context(), chi.RouteCtxKey, rctx))
+
+			//When
+			userHandler.UpdateUser(w, r)
+
+			//Then
+			if tc.expErr != nil { // Must be error
+				require.Equal(t, tc.expStatus, w.Code)
+				require.EqualError(t, tc.expErr, w.Body.String())
+
+			} else {
+				// Must be success
+				require.Equal(t, http.StatusOK, w.Code)
+				// Compare expect result and response body (string)
+				require.Equal(t, tc.expResult, string(w.Body.Bytes()))
+			}
+		})
+	}
 }
