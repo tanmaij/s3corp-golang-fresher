@@ -3,12 +3,14 @@
         {
             "username": "mai",
             "email": "mai@gmail.com",
-            "name": "Mãi"
+            "name": "Mãi",
+            "createdat": "2022-06-29T00:00:00.000Z"
         },
         {
             "username": "thien",
             "email": "thien@gmail.com",
-            "name": "thien"
+            "name": "thien",
+            "createdat": "2022-06-29T00:00:00.000Z"
         }
     ],
     "pagination": {

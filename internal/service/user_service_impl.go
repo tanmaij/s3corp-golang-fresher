@@ -126,3 +126,12 @@ func (userServiceImpl UserServiceImpl) DeleteUser(username string) error {
 	}
 	return nil
 }
+func (userServiceImpl UserServiceImpl) UsersStatsCSVFile(year int) ([]byte, error) {
+	_, err := userServiceImpl.UserRepo.GetUsers()
+
+	if err != nil {
+		return nil, errors.NewError(errors.InternalServerError, http.StatusInternalServerError)
+	}
+
+	return nil, nil
+}

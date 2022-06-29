@@ -23,51 +23,79 @@ import (
 
 // User is an object representing the database table.
 type User struct {
-	Username string `boil:"username" json:"username" toml:"username" yaml:"username"`
-	Password string `boil:"password" json:"password" toml:"password" yaml:"password"`
-	Email    string `boil:"email" json:"email" toml:"email" yaml:"email"`
-	Name     string `boil:"name" json:"name" toml:"name" yaml:"name"`
+	Username  string    `boil:"username" json:"username" toml:"username" yaml:"username"`
+	Password  string    `boil:"password" json:"password" toml:"password" yaml:"password"`
+	Email     string    `boil:"email" json:"email" toml:"email" yaml:"email"`
+	Name      string    `boil:"name" json:"name" toml:"name" yaml:"name"`
+	CreatedAt time.Time `boil:"createdat" json:"createdat" toml:"createdat" yaml:"createdat"`
 
 	R *userR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L userL  `boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 var UserColumns = struct {
-	Username string
-	Password string
-	Email    string
-	Name     string
+	Username  string
+	Password  string
+	Email     string
+	Name      string
+	CreatedAt string
 }{
-	Username: "username",
-	Password: "password",
-	Email:    "email",
-	Name:     "name",
+	Username:  "username",
+	Password:  "password",
+	Email:     "email",
+	Name:      "name",
+	CreatedAt: "createdat",
 }
 
 var UserTableColumns = struct {
-	Username string
-	Password string
-	Email    string
-	Name     string
+	Username  string
+	Password  string
+	Email     string
+	Name      string
+	CreatedAt string
 }{
-	Username: "user.username",
-	Password: "user.password",
-	Email:    "user.email",
-	Name:     "user.name",
+	Username:  "user.username",
+	Password:  "user.password",
+	Email:     "user.email",
+	Name:      "user.name",
+	CreatedAt: "user.createdat",
 }
 
 // Generated where
 
+type whereHelpertime_Time struct{ field string }
+
+func (w whereHelpertime_Time) EQ(x time.Time) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.EQ, x)
+}
+func (w whereHelpertime_Time) NEQ(x time.Time) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.NEQ, x)
+}
+func (w whereHelpertime_Time) LT(x time.Time) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.LT, x)
+}
+func (w whereHelpertime_Time) LTE(x time.Time) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.LTE, x)
+}
+func (w whereHelpertime_Time) GT(x time.Time) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.GT, x)
+}
+func (w whereHelpertime_Time) GTE(x time.Time) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.GTE, x)
+}
+
 var UserWhere = struct {
-	Username whereHelperstring
-	Password whereHelperstring
-	Email    whereHelperstring
-	Name     whereHelperstring
+	Username  whereHelperstring
+	Password  whereHelperstring
+	Email     whereHelperstring
+	Name      whereHelperstring
+	CreatedAt whereHelpertime_Time
 }{
-	Username: whereHelperstring{field: "\"main\".\"user\".\"username\""},
-	Password: whereHelperstring{field: "\"main\".\"user\".\"password\""},
-	Email:    whereHelperstring{field: "\"main\".\"user\".\"email\""},
-	Name:     whereHelperstring{field: "\"main\".\"user\".\"name\""},
+	Username:  whereHelperstring{field: "\"main\".\"user\".\"username\""},
+	Password:  whereHelperstring{field: "\"main\".\"user\".\"password\""},
+	Email:     whereHelperstring{field: "\"main\".\"user\".\"email\""},
+	Name:      whereHelperstring{field: "\"main\".\"user\".\"name\""},
+	CreatedAt: whereHelpertime_Time{field: "\"main\".\"user\".\"createdat\""},
 }
 
 // UserRels is where relationship names are stored.
@@ -98,9 +126,9 @@ func (r *userR) GetUsernameDocuments() DocumentSlice {
 type userL struct{}
 
 var (
-	userAllColumns            = []string{"username", "password", "email", "name"}
+	userAllColumns            = []string{"username", "password", "email", "name", "createdat"}
 	userColumnsWithoutDefault = []string{"username", "password", "email", "name"}
-	userColumnsWithDefault    = []string{}
+	userColumnsWithDefault    = []string{"createdat"}
 	userPrimaryKeyColumns     = []string{"username"}
 	userGeneratedColumns      = []string{}
 )

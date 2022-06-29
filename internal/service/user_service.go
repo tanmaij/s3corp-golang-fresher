@@ -24,4 +24,6 @@ type UserService interface {
 
 	// DeleteUser Delete one record by username parameter
 	DeleteUser(username string) error
+
+	UsersStatsCSVFile(year int) ([]byte, error)
 }

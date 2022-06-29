@@ -1,0 +1,1 @@
+ALTER TABLE "main"."user" ADD COLUMN CreatedAt TIMESTAMP NOT NULL DEFAULT current_timestamp;
