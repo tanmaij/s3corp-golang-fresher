@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/go-chi/chi/v5"
-	"log"
 	"net/http"
 	"s3corp-golang-fresher/internal/errors"
 	"s3corp-golang-fresher/internal/models"
@@ -43,7 +42,8 @@ func (userHandler UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 	// Decode data from r.Body to the variable
 	requestBody := make(map[string]interface{})
 	if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
-		http.Error(w, errors.InvalidData, http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprint(w, errors.InvalidData)
 		return
 	}
 
@@ -73,7 +73,8 @@ func (userHandler UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 	// 4. If not error, response user information and token
 	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).Encode(map[string]any{"user": user, "token": token}); err != nil {
-		log.Fatalln("response data invalid")
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprint(w, errors.InternalServerError)
 		return
 	}
 }
@@ -91,7 +92,8 @@ func (userHandler UserHandler) GetUserByUsername(w http.ResponseWriter, r *http.
 	w.WriteHeader(http.StatusOK)
 
 	if err := json.NewEncoder(w).Encode(user); err != nil {
-		log.Fatalln("response data invalid")
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprint(w, errors.InternalServerError)
 		return
 	}
 }
@@ -123,7 +125,8 @@ func (userHandler UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) 
 	// 3. If not error, response data that include user and pagination
 	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).Encode(map[string]any{"users": users, "pagination": pagination}); err != nil {
-		log.Fatalln("response data invalid")
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprint(w, errors.InternalServerError)
 		return
 	}
 }
@@ -134,7 +137,8 @@ func (userHandler UserHandler) CreateUser(w http.ResponseWriter, r *http.Request
 	// Decode data from r.Body to the variable
 	requestBody := make(map[string]interface{})
 	if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
-		http.Error(w, errors.InvalidData, http.StatusBadRequest)
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprint(w, errors.InternalServerError)
 		return
 	}
 
@@ -197,7 +201,11 @@ func (userHandler UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request
 
 	username := chi.URLParam(r, "username")
 	user := make(map[string]interface{})
-	json.NewDecoder(r.Body).Decode(&user)
+	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprint(w, errors.InvalidData)
+		return
+	}
 
 	password, ok := user["password"]
 	if !ok {

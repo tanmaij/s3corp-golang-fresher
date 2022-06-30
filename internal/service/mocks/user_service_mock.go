@@ -11,35 +11,35 @@ type UserServiceMock struct {
 }
 
 // CreateUser provides a mock function with given fields: user
-func (m *UserServiceMock) CreateUser(user models.User) error {
+func (userServiceMock *UserServiceMock) CreateUser(user models.User) error {
 
-	args := m.Called(user)
+	args := userServiceMock.Called(user)
 
 	return args.Error(0)
 
 }
 
 // DeleteUser provides a mock function with given fields: username
-func (m *UserServiceMock) DeleteUser(username string) error {
+func (userServiceMock *UserServiceMock) DeleteUser(username string) error {
 
-	args := m.Called(username)
+	args := userServiceMock.Called(username)
 
 	return args.Error(0)
 }
 
 // GetUserByUsername provides a mock function with given fields: username
-func (m *UserServiceMock) GetUserByUsername(username string) (models.User, error) {
+func (userServiceMock *UserServiceMock) GetUserByUsername(username string) (models.User, error) {
 
-	args := m.Called(username)
+	args := userServiceMock.Called(username)
 
 	return args.Get(0).(models.User), args.Get(1).(error)
 
 }
 
 // GetUsers provides a mock function with given fields: queriesParams
-func (m *UserServiceMock) GetUsers(queriesParams map[string]int) ([]models.User, utils.Pagination, error) {
+func (userServiceMock *UserServiceMock) GetUsers(queriesParams map[string]int) ([]models.User, utils.Pagination, error) {
 
-	args := m.Called(queriesParams)
+	args := userServiceMock.Called(queriesParams)
 
 	users := args.Get(0).([]models.User)
 
@@ -52,24 +52,24 @@ func (m *UserServiceMock) GetUsers(queriesParams map[string]int) ([]models.User,
 }
 
 // Login provides a mock function with given fields: username, password
-func (m *UserServiceMock) Login(username string, password string) (models.User, string, error) {
+func (userServiceMock *UserServiceMock) Login(username string, password string) (models.User, string, error) {
 
-	args := m.Called(username, password)
+	args := userServiceMock.Called(username, password)
 
 	return args.Get(0).(models.User), args.String(1), args.Error(2)
 
 }
 
 // UpdateUser provides a mock function with given fields: user
-func (m *UserServiceMock) UpdateUser(user models.User) error {
+func (userServiceMock *UserServiceMock) UpdateUser(user models.User) error {
 
-	args := m.Called(user)
+	args := userServiceMock.Called(user)
 
 	return args.Error(0)
 
 }
-func (m *UserServiceMock) UsersStatsCSVFile(year int) ([]byte, error) {
-	args := m.Called()
+func (userServiceMock *UserServiceMock) UsersStatsCSVFile(year int) ([]byte, error) {
+	args := userServiceMock.Called()
 
 	return args.Get(0).([]byte), args.Error(1)
 }
