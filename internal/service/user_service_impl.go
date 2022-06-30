@@ -8,6 +8,7 @@ import (
 	"s3corp-golang-fresher/internal/repository"
 	"s3corp-golang-fresher/pkg"
 	"s3corp-golang-fresher/utils"
+	"strings"
 )
 
 type UserServiceImpl struct {
@@ -128,39 +129,52 @@ func (userServiceImpl UserServiceImpl) DeleteUser(username string) error {
 }
 func (userServiceImpl UserServiceImpl) UsersStatsCSVFile(year int) ([]byte, error) {
 
-	// Result to return
-	var byteResult []byte
-	// Write header rows
-	byteResult = append(byteResult, []byte("USERNAME,NAME,EMAIL,CREATED AT\n")...)
-	//Get data from repo
+	//Get data from repo (sorted)
 	users, err := userServiceImpl.UserRepo.GetUsersByYear(year)
-
 	if err != nil {
 		return nil, errors.NewError(errors.InternalServerError, http.StatusInternalServerError)
 	}
+	if len(users) == 0 {
+		return nil, errors.NewError(errors.NoDataAvailable, http.StatusNotFound)
+	}
+	// Define All record
+	var records = make([]string, len(users))
 
-	// Define worker to handle some user data
-	var worker = func(users models.UserSlice, b chan<- []byte) {
-		for _, v := range users {
-			b <- []byte(v.Username + "," + v.Name + "," + v.Email + "," + v.CreatedAt.String() + "\n") // One rows
+	type record struct {
+		index int // Index sorted of record
+		desc  string
+	}
+	// Define worker to handle some user data (users slice, record channel, start index)
+	var worker = func(users models.UserSlice, r chan<- record, index int) {
+		for i, v := range users {
+			// One row
+			desc := v.Username + "," + v.Name + "," + v.Email + "," + v.CreatedAt.Format("02-01-2006") + "\n"
+			r <- record{i + index, desc}
 		}
 	}
 
-	numUser := len(users)                             // Number of data
-	numWorker := 5                                    // Number of worker
-	bytesChan := make(chan []byte, numUser/numWorker) // Channel
+	numUsers := len(users)                           // Number of data
+	numWorker := 5                                   // Number of worker
+	rowChan := make(chan record, numUsers/numWorker) // Per row channel
 
 	for i := 0; i < numWorker; i++ {
 		// index and last index to slice
 		start := i * (len(users) / numWorker)
 		end := (i + 1) * (len(users) / numWorker)
-		// start goroutine
-		go worker(users[start:end], bytesChan)
+		// start routine
+		go worker(users[start:end], rowChan, start)
 	}
 
-	for i := 0; i < len(users); i++ {
-		byteResult = append(byteResult, <-bytesChan...) // Write one row into the result
+	for i := 0; i < numUsers; i++ {
+		// get one row to the records, use index to make sure the record is sorted
+		oneRow := <-rowChan
+		records[oneRow.index] = oneRow.desc
+		if oneRow.index == numUsers-1 {
+			records[oneRow.index] = strings.ReplaceAll(oneRow.desc, "\n", "")
+		}
 	}
 
-	return byteResult, nil
+	// Join the records to the result(text of file) and add first rows as a header
+	result := "USERNAME,NAME,EMAIL,CREATED AT\n" + strings.Join(records, "")
+	return []byte(result), nil
 }
