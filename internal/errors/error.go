@@ -35,4 +35,5 @@ const (
 	PasswordIsNotFound  = "username is not found"
 	EmailIsNotFound     = "email is not found"
 	NameIsNotFound      = "name is not found"
+	NoDataAvailable     = "no data available"
 )

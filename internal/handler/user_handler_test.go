@@ -105,14 +105,14 @@ func TestUserHandler_Login(t *testing.T) {
 				t.Error("Error on reading the input file")
 			}
 			// Define response for test (if test case is not error case)
-			var response LoginResponse
+			var expRes LoginResponse
 			if tc.expErr == nil {
 				// Get result data from json file (if test case is not error case)
 				output, err := readJsonFile(tc.expResult)
 				if err != nil {
 					t.Error("Error on reading the result file")
 				}
-				if err := json.Unmarshal(output, &response); err != nil {
+				if err := json.Unmarshal(output, &expRes); err != nil {
 					t.Log("This is error case")
 				}
 			}
@@ -150,7 +150,7 @@ func TestUserHandler_Login(t *testing.T) {
 				}
 
 				// Compare res and response which is defined
-				require.Equal(t, response, res)
+				require.Equal(t, expRes, res)
 			}
 		})
 	}
@@ -274,13 +274,13 @@ func TestUserHandler_GetUsers(t *testing.T) {
 	for desc, tc := range tcs {
 		t.Run(desc, func(t *testing.T) {
 			// Given
-			var expResponse GetUserResponse // Define response for test (if test case is not error case)
+			var expRes GetUserResponse // Define response for test (if test case is not error case)
 			if tc.expErr == nil {
 				output, err := readJsonFile(tc.expResult)
 				if err != nil {
 					t.Error("Error on reading the result file")
 				}
-				if err := json.Unmarshal(output, &expResponse); err != nil { // Write data to response variable
+				if err := json.Unmarshal(output, &expRes); err != nil { // Write data to response variable
 					t.Log("This is error case")
 				}
 			}
@@ -320,7 +320,7 @@ func TestUserHandler_GetUsers(t *testing.T) {
 				}
 
 				// Compare expect result and response body
-				require.Equal(t, expResponse, res)
+				require.Equal(t, expRes, res)
 			}
 		})
 	}
