@@ -4,10 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/jwtauth"
 	"net/http"
 	"s3corp-golang-fresher/internal/errors"
 	"s3corp-golang-fresher/internal/models"
+	"s3corp-golang-fresher/internal/roles"
 	"s3corp-golang-fresher/internal/service"
+	"s3corp-golang-fresher/pkg"
 	"strconv"
 	"strings"
 )
@@ -21,19 +24,34 @@ func NewUserHandler(userService service.UserService) UserHandler {
 	return UserHandler{UserService: userService}
 }
 
+var jwtAuth = pkg.GetJWTAuth()
+
 func (userHandler UserHandler) UserHandler(r chi.Router) {
 
-	r.Post("/login", userHandler.Login)
+	// Protected routes
+	r.Group(func(r chi.Router) {
+		// Seek, verify and validate JWT tokens
+		r.Use(jwtauth.Verifier(jwtAuth))
 
-	r.Get("/", userHandler.GetUsers)
+		// Handle valid / invalid tokens. In this example, we use
+		// the provided authenticator middleware, but you can write your
+		// own very easily, look at the Authenticator method in jwtauth.go
+		// and tweak it, its not scary.
+		r.Use(jwtauth.Authenticator)
 
-	r.Get("/{username}", userHandler.GetUserByUsername)
+		r.Put("/{id}", userHandler.UpdateUser)
 
-	r.Put("/{id}", userHandler.UpdateUser)
+		r.Delete("/{id}", userHandler.DeleteUser)
 
-	r.Delete("/{id}", userHandler.DeleteUser)
+	})
+	r.Group(func(r chi.Router) {
 
-	r.Post("/", userHandler.CreateUser)
+		r.Get("/", userHandler.GetUsers)
+
+		r.Post("/login", userHandler.Login)
+
+		r.Post("/", userHandler.CreateUser)
+	})
 }
 
 func (userHandler UserHandler) Login(w http.ResponseWriter, r *http.Request) {
@@ -73,25 +91,6 @@ func (userHandler UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 	// 4. If not error, response user information and token
 	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).Encode(map[string]any{"user": user, "token": token}); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprint(w, errors.InternalServerError)
-		return
-	}
-}
-
-func (userHandler UserHandler) GetUserByUsername(w http.ResponseWriter, r *http.Request) {
-	username := chi.URLParam(r, "username")
-
-	user, err := userHandler.UserService.GetUserByUsername(username)
-
-	if err != nil {
-		err.(errors.Error).Response(w)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-
-	if err := json.NewEncoder(w).Encode(user); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprint(w, errors.InternalServerError)
 		return
@@ -206,13 +205,6 @@ func (userHandler UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request
 		fmt.Fprint(w, errors.InvalidData)
 		return
 	}
-
-	password, ok := user["password"]
-	if !ok {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, "Password is NOT FOUND")
-		return
-	}
 	name, ok := user["name"]
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
@@ -231,7 +223,6 @@ func (userHandler UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request
 		return
 	}
 	newUser := models.User{
-		Password: password.(string),
 		Username: username,
 		Email:    email.(string),
 		Name:     name.(string)}
@@ -247,13 +238,46 @@ func (userHandler UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request
 }
 
 func (userHandler UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
-
+	// Get username from url
 	username := chi.URLParam(r, "username")
+	if username == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprint(w, errors.InvalidData)
+		return
+	}
+	// Get user data from context
+	token, claims, err := jwtauth.FromContext(r.Context())
+	if err != nil || token == nil || claims == nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		fmt.Fprint(w, errors.InvalidToken)
+		return
+	}
+	// Get role to authorization
+	role, ok := claims["role"].(string)
+	if !ok {
+		w.WriteHeader(http.StatusUnauthorized)
+		fmt.Fprint(w, errors.InvalidToken)
+		return
+	}
+	// get author username of the request
+	author, ok := claims["username"].(string)
+	if !ok {
+		w.WriteHeader(http.StatusUnauthorized)
+		fmt.Fprint(w, errors.InvalidToken)
+		return
+	}
 
-	err := userHandler.UserService.DeleteUser(username)
+	// Authorization role or username
+	if role != roles.Admin && author != username {
+		w.WriteHeader(http.StatusUnauthorized)
+		fmt.Fprint(w, errors.PermissionDenied)
+		return
+	}
+	// If there are not any error, delete user
+	err2 := userHandler.UserService.DeleteUser(username)
 
-	if err != nil {
-		err.(errors.Error).Response(w)
+	if err2 != nil {
+		err2.(errors.Error).Response(w)
 		return
 	}
 

@@ -11,6 +11,7 @@ var UserLogin = models.User{
 	Password:  "1",
 	Email:     "mai@gmail.com",
 	Name:      "Mãi",
+	Role:      "user",
 	CreatedAt: time.Date(2022, 6, 29, 0, 0, 0, 0, time.UTC),
 }
 var TokenLogin = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Im1haSJ9.qYNphS_Xycc7-XY9MD9o_kTHocUjV6kCH0hD1EzTDk4"
@@ -20,12 +21,14 @@ var UserSlice = []models.User{
 		Username:  "mai",
 		Email:     "mai@gmail.com",
 		Name:      "Mãi",
+		Role:      "user",
 		CreatedAt: time.Date(2022, 6, 29, 0, 0, 0, 0, time.UTC),
 	},
 	models.User{
 		Username:  "thien",
 		Email:     "thien@gmail.com",
 		Name:      "thien",
+		Role:      "user",
 		CreatedAt: time.Date(2022, 6, 29, 0, 0, 0, 0, time.UTC),
 	},
 }

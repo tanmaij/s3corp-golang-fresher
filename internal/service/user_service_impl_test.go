@@ -1,7 +1,9 @@
 package service
 
 import (
+	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/require"
+	"log"
 	"net/http"
 	"os"
 	"s3corp-golang-fresher/internal/errors"
@@ -74,6 +76,7 @@ func TestUserServiceImpl_UsersStatsCSVFile(t *testing.T) {
 
 			//When
 			res, err := userService.UsersStatsCSVFile(tc.input)
+			ReportToAdmin()
 
 			//Then
 			if tc.expErr != nil { // Must be error
@@ -89,5 +92,9 @@ func TestUserServiceImpl_UsersStatsCSVFile(t *testing.T) {
 
 }
 func TestMain(m *testing.M) {
+	err := godotenv.Load("../../.env")
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
 	m.Run()
 }

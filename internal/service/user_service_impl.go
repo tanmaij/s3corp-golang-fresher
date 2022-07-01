@@ -39,11 +39,13 @@ func (userServiceImpl UserServiceImpl) Login(username string, password string) (
 		return *user, "", errors.NewError(errors.PasswordIsIncorrect, http.StatusUnauthorized)
 	}
 
-	// 4. Create a token string with username
-	_, token, _ := jwtAuth.Encode(map[string]any{"username": user.Username})
-
+	// 4. Create a token string with username and role
+	_, token, err := jwtAuth.Encode(map[string]any{"username": user.Username, "role": user.Role})
+	if err != nil {
+		return *user, "", errors.NewError(errors.InternalServerError, http.StatusInternalServerError)
+	}
 	// 5. return user information, token string and not error
-	return *user, token, nil
+	return *user, token, err
 }
 
 func (userServiceImpl UserServiceImpl) GetUserByUsername(username string) (models.User, error) {

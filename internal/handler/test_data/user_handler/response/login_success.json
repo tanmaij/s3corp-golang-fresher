@@ -5,6 +5,7 @@
       "password": "1",
       "email": "mai@gmail.com",
       "name": "Mãi",
+      "role": "user",
       "createdat": "2022-06-29T00:00:00.000Z"
     }
 }

@@ -110,8 +110,14 @@ table, td { color: #000000; } a { color: #ffffff; text-decoration: none; } @medi
 
 <div class="u-row-container" style="padding: 0px;background-color: transparent">
   <div class="u-row" style="Margin: 0 auto;min-width: 320px;max-width: 550px;overflow-wrap: break-word;word-wrap: break-word;word-break: break-word;background-color: #fc5656;">
-    <div style="border-collapse: collapse;display: table;width: 100%;background-image: url('images/image-1.png');background-repeat: repeat;background-position: center top;background-color: transparent;">
-      <!--[if (mso)|(IE)]><table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="padding: 0px;background-color: transparent;" align="center"><table cellpadding="0" cellspacing="0" border="0" style="width:550px;"><tr style="background-image: url('images/image-1.png');background-repeat: repeat;background-position: center top;background-color: #fc5656;"><![endif]-->
+    <div style="border-collapse: collapse;display: table;width: 100%;background-image: url('./images/image-1.png');background-repeat: repeat;background-position: center top;background-color: transparent;">
+      <!--[if (mso)|(IE)]>
+        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+            <tr>
+                <td style="padding: 0px;background-color: transparent;" align="center">
+                    <table cellpadding="0" cellspacing="0" border="0" style="width:550px;">
+                        <tr style="background-image: url('./images/image-1.png');background-repeat: repeat;background-position: center top;background-color: #fc5656;">
+        <![endif]-->
       
 <!--[if (mso)|(IE)]><td align="center" width="534" style="width: 534px;padding: 0px;border-top: 8px solid #000000;border-left: 8px solid #000000;border-right: 8px solid #000000;border-bottom: 0px solid transparent;" valign="top"><![endif]-->
 <div class="u-col u-col-100" style="max-width: 320px;min-width: 550px;display: table-cell;vertical-align: top;">
@@ -184,8 +190,8 @@ table, td { color: #000000; } a { color: #ffffff; text-decoration: none; } @medi
       <td style="overflow-wrap:break-word;word-break:break-word;padding:10px;font-family:'Montserrat',sans-serif;" align="left">
         
   <div class="v-text-align" style="color: #ffffff; line-height: 100%; text-align: left; word-wrap: break-word;">
-    <p style="font-size: 14px; line-height: 100%; text-align: center;"><strong><span style="font-size: 44px; line-height: 44px;"><span style="line-height: 44px; font-size: 44px;">HOLIDAYS</span></span></strong></p>
-<p style="font-size: 14px; line-height: 100%; text-align: center;"><span style="font-size: 72px; line-height: 72px;"><strong><span style="line-height: 72px; font-size: 72px;"><span style="line-height: 72px; font-size: 72px;">DEALS</span></span></strong></span></p>
+    <p style="font-size: 14px; line-height: 100%; text-align: center;"><strong><span style="font-size: 44px; line-height: 44px;"><span style="line-height: 44px; font-size: 44px;">{{.Title}}</span></span></strong></p>
+<p style="font-size: 14px; line-height: 100%; text-align: center;"><span style="font-size: 72px; line-height: 72px;"><strong><span style="line-height: 72px; font-size: 72px;"><span style="line-height: 72px; font-size: 72px;"></span></span></strong></span></p>
   </div>
 
       </td>
@@ -199,7 +205,7 @@ table, td { color: #000000; } a { color: #ffffff; text-decoration: none; } @medi
       <td style="overflow-wrap:break-word;word-break:break-word;padding:10px;font-family:'Montserrat',sans-serif;" align="left">
         
   <div class="v-text-align" style="color: #ffffff; line-height: 140%; text-align: center; word-wrap: break-word;">
-    <p style="font-size: 14px; line-height: 140%;">Lorem ipsum dolor sit amet, ctetuer</p>
+    <p style="font-size: 14px; line-height: 140%;">{{.Describe}}</p>
   </div>
 
       </td>

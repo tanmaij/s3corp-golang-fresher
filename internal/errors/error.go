@@ -23,7 +23,7 @@ func (error Error) Error() string {
 
 const (
 	InvalidData         = "invalid Data"
-	UserAlreadyExist    = "user already exist"
+	UserAlreadyExist    = "user already exist or email is already used"
 	PasswordIsIncorrect = "password is incorrect"
 	Successfully        = "Successfully"
 	InternalServerError = "internal Server Error"
@@ -36,4 +36,6 @@ const (
 	EmailIsNotFound     = "email is not found"
 	NameIsNotFound      = "name is not found"
 	NoDataAvailable     = "no data available"
+	InvalidToken        = "invalid Token"
+	PermissionDenied    = "permission Denied"
 )

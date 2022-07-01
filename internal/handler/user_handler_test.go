@@ -6,8 +6,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/jwtauth"
+	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/require"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -15,6 +18,7 @@ import (
 	"s3corp-golang-fresher/internal/handler/test_data/fake_data"
 	"s3corp-golang-fresher/internal/models"
 	"s3corp-golang-fresher/internal/service/mocks"
+	"s3corp-golang-fresher/pkg"
 	"s3corp-golang-fresher/utils"
 	"strconv"
 	"testing"
@@ -327,25 +331,46 @@ func TestUserHandler_GetUsers(t *testing.T) {
 }
 
 func TestUserHandler_DeleteUser(t *testing.T) {
-	// 1. Create new user service mock for test
+	// Create new user service mock for test
 	// Create new user handler with user service mock
 	userServiceMock := new(mocks.UserServiceMock)
 	userHandler = NewUserHandler(userServiceMock)
 
+	//Define type struct for input
+	type Input struct {
+		Username string                 `json:"username"`
+		AuthData map[string]interface{} `json:"authData"`
+	}
+
 	tcs := map[string]struct {
-		input     string
+		input     Input
 		expResult string
 		expStatus int
 		expErr    error
 	}{
 		"success": {
-			input:     "mai",
+			input: Input{
+				Username: "mai",
+				AuthData: map[string]any{"username": "mai", "role": "user"},
+			},
 			expResult: "Delete user successfully",
 			expStatus: http.StatusOK,
 		},
+		"unauthorized": {
+			input: Input{
+				Username: "loc2",
+				AuthData: map[string]any{"username": "loc", "role": "user"},
+			},
+			expResult: "",
+			expStatus: http.StatusUnauthorized,
+			expErr:    errors.NewError(errors.PermissionDenied, http.StatusUnauthorized),
+		},
 		"not_exist": {
-			input:     "loc",
-			expResult: "Delete user successfully",
+			input: Input{
+				Username: "loc2",
+				AuthData: map[string]any{"username": "loc2", "role": "user"},
+			},
+			expResult: "",
 			expStatus: http.StatusNotFound,
 			expErr:    errors.NewError(errors.NotExist, http.StatusNotFound),
 		},
@@ -355,20 +380,30 @@ func TestUserHandler_DeleteUser(t *testing.T) {
 		t.Run(desc, func(t *testing.T) {
 
 			// Given
-
 			// Set up data will be return if method DeleteUser is called
-			userServiceMock.On("DeleteUser", tc.input).Return(tc.expErr)
+			userServiceMock.On("DeleteUser", tc.input.Username).Return(tc.expErr)
 
 			// Define http test request
-			r := httptest.NewRequest(http.MethodDelete, url+tc.input, nil)
 			// Define http test response
+			r := httptest.NewRequest(http.MethodDelete, url+tc.input.Username, nil)
 			w := httptest.NewRecorder()
+
 			// Init chi route context
-			rctx := chi.NewRouteContext()
 			// Set username to chi route context
-			rctx.URLParams.Add("username", tc.input)
 			// Add chi route context to request
+			rctx := chi.NewRouteContext()
+			rctx.URLParams.Add("username", tc.input.Username)
 			r = r.WithContext(context.WithValue(r.Context(), chi.RouteCtxKey, rctx))
+
+			// Add accessToken to request header
+			// Create a token form from input auth data
+			// Add token data to context
+			jwtAuth = pkg.GetJWTAuth()
+			token, _, err := jwtAuth.Encode(tc.input.AuthData)
+			if err != nil {
+				t.Fatal("Error on attaching token")
+			}
+			r = r.WithContext(context.WithValue(r.Context(), jwtauth.TokenCtxKey, token))
 
 			//When
 			userHandler.DeleteUser(w, r)
@@ -464,4 +499,13 @@ func TestUserHandler_UpdateUser(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestMain(m *testing.M) {
+	err := godotenv.Load("../../.env")
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+	pkg.InitJWT()
+	m.Run()
 }

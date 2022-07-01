@@ -13,8 +13,8 @@ CREATE TABLE main.Document
 (
     DocumentId UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     Subject         VARCHAR NOT NULL,
-    CreatedAt     TIMESTAMP DEFAULT current_timestamp,
-    Username VARCHAR,
+    CreatedAt     TIMESTAMP NOT NULL DEFAULT current_timestamp,
+    Username VARCHAR NOT NULL,
     CONSTRAINT FkSubDocument_DocumentId
         FOREIGN KEY (Username) REFERENCES main."user"(Username)  ON DELETE CASCADE
 );
@@ -23,9 +23,9 @@ CREATE TABLE main.DocumentItem
 (
     DocumentItemId UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     Title         VARCHAR NOT NULL,
-    CreatedAt     TIMESTAMP DEFAULT current_timestamp,
+    CreatedAt     TIMESTAMP DEFAULT current_timestamp NOT NULL,
     Content       VARCHAR NOT NULL,
-    DocumentId UUID,
+    DocumentId UUID NOT NULL,
     CONSTRAINT FkSubDocument_DocumentId
         FOREIGN KEY (DocumentId) REFERENCES main.Document(DocumentId) ON DELETE CASCADE
 )
