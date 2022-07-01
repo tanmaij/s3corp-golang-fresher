@@ -73,7 +73,7 @@ func TestUserServiceImpl_UsersStatsCSVFile(t *testing.T) {
 			userRepoMock.On("GetUsersByYear", tc.input).Return(tc.givenData.Users, tc.givenData.Error)
 
 			//When
-			res, err := userService.UsersStatsCSVFile(2022)
+			res, err := userService.UsersStatsCSVFile(tc.input)
 
 			//Then
 			if tc.expErr != nil { // Must be error
