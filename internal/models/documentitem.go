@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"github.com/friendsofgo/errors"
-	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
@@ -24,11 +23,11 @@ import (
 
 // DocumentItem is an object representing the database table.
 type DocumentItem struct {
-	DocumentItemID string      `boil:"documentitemid" json:"documentitemid" toml:"documentitemid" yaml:"documentitemid"`
-	Title          string      `boil:"title" json:"title" toml:"title" yaml:"title"`
-	CreatedAt      null.Time   `boil:"createdat" json:"createdat,omitempty" toml:"createdat" yaml:"createdat,omitempty"`
-	Content        string      `boil:"content" json:"content" toml:"content" yaml:"content"`
-	Documentid     null.String `boil:"documentid" json:"documentid,omitempty" toml:"documentid" yaml:"documentid,omitempty"`
+	DocumentItemID string    `boil:"documentitemid" json:"documentitemid" toml:"documentitemid" yaml:"documentitemid"`
+	Title          string    `boil:"title" json:"title" toml:"title" yaml:"title"`
+	CreatedAt      time.Time `boil:"createdat" json:"createdat" toml:"createdat" yaml:"createdat"`
+	Content        string    `boil:"content" json:"content" toml:"content" yaml:"content"`
+	Documentid     string    `boil:"documentid" json:"documentid" toml:"documentid" yaml:"documentid"`
 
 	R *documentItemR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L documentItemL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -67,15 +66,15 @@ var DocumentItemTableColumns = struct {
 var DocumentItemWhere = struct {
 	DocumentItemID whereHelperstring
 	Title          whereHelperstring
-	CreatedAt      whereHelpernull_Time
+	CreatedAt      whereHelpertime_Time
 	Content        whereHelperstring
-	Documentid     whereHelpernull_String
+	Documentid     whereHelperstring
 }{
 	DocumentItemID: whereHelperstring{field: "\"main\".\"documentitem\".\"documentitemid\""},
 	Title:          whereHelperstring{field: "\"main\".\"documentitem\".\"title\""},
-	CreatedAt:      whereHelpernull_Time{field: "\"main\".\"documentitem\".\"createdat\""},
+	CreatedAt:      whereHelpertime_Time{field: "\"main\".\"documentitem\".\"createdat\""},
 	Content:        whereHelperstring{field: "\"main\".\"documentitem\".\"content\""},
-	Documentid:     whereHelpernull_String{field: "\"main\".\"documentitem\".\"documentid\""},
+	Documentid:     whereHelperstring{field: "\"main\".\"documentitem\".\"documentid\""},
 }
 
 // DocumentItemRels is where relationship names are stored.
@@ -107,8 +106,8 @@ type documentItemL struct{}
 
 var (
 	documentItemAllColumns            = []string{"documentitemid", "title", "createdat", "content", "documentid"}
-	documentItemColumnsWithoutDefault = []string{"title", "content"}
-	documentItemColumnsWithDefault    = []string{"documentitemid", "createdat", "documentid"}
+	documentItemColumnsWithoutDefault = []string{"title", "content", "documentid"}
+	documentItemColumnsWithDefault    = []string{"documentitemid", "createdat"}
 	documentItemPrimaryKeyColumns     = []string{"documentitemid"}
 	documentItemGeneratedColumns      = []string{}
 )
@@ -419,9 +418,7 @@ func (documentItemL) LoadDocumentidDocument(ctx context.Context, e boil.ContextE
 		if object.R == nil {
 			object.R = &documentItemR{}
 		}
-		if !queries.IsNil(object.Documentid) {
-			args = append(args, object.Documentid)
-		}
+		args = append(args, object.Documentid)
 
 	} else {
 	Outer:
@@ -431,14 +428,12 @@ func (documentItemL) LoadDocumentidDocument(ctx context.Context, e boil.ContextE
 			}
 
 			for _, a := range args {
-				if queries.Equal(a, obj.Documentid) {
+				if a == obj.Documentid {
 					continue Outer
 				}
 			}
 
-			if !queries.IsNil(obj.Documentid) {
-				args = append(args, obj.Documentid)
-			}
+			args = append(args, obj.Documentid)
 
 		}
 	}
@@ -496,7 +491,7 @@ func (documentItemL) LoadDocumentidDocument(ctx context.Context, e boil.ContextE
 
 	for _, local := range slice {
 		for _, foreign := range resultSlice {
-			if queries.Equal(local.Documentid, foreign.DocumentID) {
+			if local.Documentid == foreign.DocumentID {
 				local.R.DocumentidDocument = foreign
 				if foreign.R == nil {
 					foreign.R = &documentR{}
@@ -537,7 +532,7 @@ func (o *DocumentItem) SetDocumentidDocument(ctx context.Context, exec boil.Cont
 		return errors.Wrap(err, "failed to update local table")
 	}
 
-	queries.Assign(&o.Documentid, related.DocumentID)
+	o.Documentid = related.DocumentID
 	if o.R == nil {
 		o.R = &documentItemR{
 			DocumentidDocument: related,
@@ -554,39 +549,6 @@ func (o *DocumentItem) SetDocumentidDocument(ctx context.Context, exec boil.Cont
 		related.R.DocumentidDocumentitems = append(related.R.DocumentidDocumentitems, o)
 	}
 
-	return nil
-}
-
-// RemoveDocumentidDocument relationship.
-// Sets o.R.DocumentidDocument to nil.
-// Removes o from all passed in related items' relationships struct.
-func (o *DocumentItem) RemoveDocumentidDocument(ctx context.Context, exec boil.ContextExecutor, related *Document) error {
-	var err error
-
-	queries.SetScanner(&o.Documentid, nil)
-	if _, err = o.Update(ctx, exec, boil.Whitelist("documentid")); err != nil {
-		return errors.Wrap(err, "failed to update local table")
-	}
-
-	if o.R != nil {
-		o.R.DocumentidDocument = nil
-	}
-	if related == nil || related.R == nil {
-		return nil
-	}
-
-	for i, ri := range related.R.DocumentidDocumentitems {
-		if queries.Equal(o.Documentid, ri.Documentid) {
-			continue
-		}
-
-		ln := len(related.R.DocumentidDocumentitems)
-		if ln > 1 && i < ln-1 {
-			related.R.DocumentidDocumentitems[i] = related.R.DocumentidDocumentitems[ln-1]
-		}
-		related.R.DocumentidDocumentitems = related.R.DocumentidDocumentitems[:ln-1]
-		break
-	}
 	return nil
 }
 

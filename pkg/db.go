@@ -14,7 +14,7 @@ func NewPsqlDB() *sql.DB {
 
 	// 1. Define the Datasource name
 	// Get the data source name from .env file
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=%s", os.Getenv("HOST"), os.Getenv("USERNAME"), os.Getenv("PASSWORD"), os.Getenv("DBNAME"), os.Getenv("PORT"), os.Getenv("TIMEZONE"))
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=%s", os.Getenv("HOST"), os.Getenv("USERNAME"), os.Getenv("DB_PASSWORD"), os.Getenv("DBNAME"), os.Getenv("PORT"), os.Getenv("TIMEZONE"))
 
 	fmt.Println(dsn)
 	// 2. Open the sql database with driver 'postgres' and datasource name which is just defined

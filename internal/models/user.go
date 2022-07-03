@@ -23,51 +23,65 @@ import (
 
 // User is an object representing the database table.
 type User struct {
-	Username string `boil:"username" json:"username" toml:"username" yaml:"username"`
-	Password string `boil:"password" json:"password" toml:"password" yaml:"password"`
-	Email    string `boil:"email" json:"email" toml:"email" yaml:"email"`
-	Name     string `boil:"name" json:"name" toml:"name" yaml:"name"`
+	Username  string    `boil:"username" json:"username" toml:"username" yaml:"username"`
+	Password  string    `boil:"password" json:"password" toml:"password" yaml:"password"`
+	Email     string    `boil:"email" json:"email" toml:"email" yaml:"email"`
+	Name      string    `boil:"name" json:"name" toml:"name" yaml:"name"`
+	CreatedAt time.Time `boil:"createdat" json:"createdat" toml:"createdat" yaml:"createdat"`
+	Role      string    `boil:"role" json:"role" toml:"role" yaml:"role"`
 
 	R *userR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L userL  `boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 var UserColumns = struct {
-	Username string
-	Password string
-	Email    string
-	Name     string
+	Username  string
+	Password  string
+	Email     string
+	Name      string
+	CreatedAt string
+	Role      string
 }{
-	Username: "username",
-	Password: "password",
-	Email:    "email",
-	Name:     "name",
+	Username:  "username",
+	Password:  "password",
+	Email:     "email",
+	Name:      "name",
+	CreatedAt: "createdat",
+	Role:      "role",
 }
 
 var UserTableColumns = struct {
-	Username string
-	Password string
-	Email    string
-	Name     string
+	Username  string
+	Password  string
+	Email     string
+	Name      string
+	CreatedAt string
+	Role      string
 }{
-	Username: "user.username",
-	Password: "user.password",
-	Email:    "user.email",
-	Name:     "user.name",
+	Username:  "user.username",
+	Password:  "user.password",
+	Email:     "user.email",
+	Name:      "user.name",
+	CreatedAt: "user.createdat",
+	Role:      "user.role",
 }
 
 // Generated where
 
 var UserWhere = struct {
-	Username whereHelperstring
-	Password whereHelperstring
-	Email    whereHelperstring
-	Name     whereHelperstring
+	Username  whereHelperstring
+	Password  whereHelperstring
+	Email     whereHelperstring
+	Name      whereHelperstring
+	CreatedAt whereHelpertime_Time
+	Role      whereHelperstring
 }{
-	Username: whereHelperstring{field: "\"main\".\"user\".\"username\""},
-	Password: whereHelperstring{field: "\"main\".\"user\".\"password\""},
-	Email:    whereHelperstring{field: "\"main\".\"user\".\"email\""},
-	Name:     whereHelperstring{field: "\"main\".\"user\".\"name\""},
+	Username:  whereHelperstring{field: "\"main\".\"user\".\"username\""},
+	Password:  whereHelperstring{field: "\"main\".\"user\".\"password\""},
+	Email:     whereHelperstring{field: "\"main\".\"user\".\"email\""},
+	Name:      whereHelperstring{field: "\"main\".\"user\".\"name\""},
+	CreatedAt: whereHelpertime_Time{field: "\"main\".\"user\".\"createdat\""},
+	Role:      whereHelperstring{field: "\"main\".\"user\".\"role\""},
 }
 
 // UserRels is where relationship names are stored.
@@ -98,9 +112,9 @@ func (r *userR) GetUsernameDocuments() DocumentSlice {
 type userL struct{}
 
 var (
-	userAllColumns            = []string{"username", "password", "email", "name"}
+	userAllColumns            = []string{"username", "password", "email", "name", "createdat", "role"}
 	userColumnsWithoutDefault = []string{"username", "password", "email", "name"}
-	userColumnsWithDefault    = []string{}
+	userColumnsWithDefault    = []string{"createdat", "role"}
 	userPrimaryKeyColumns     = []string{"username"}
 	userGeneratedColumns      = []string{}
 )
@@ -423,7 +437,7 @@ func (userL) LoadUsernameDocuments(ctx context.Context, e boil.ContextExecutor, 
 			}
 
 			for _, a := range args {
-				if queries.Equal(a, obj.Username) {
+				if a == obj.Username {
 					continue Outer
 				}
 			}
@@ -481,7 +495,7 @@ func (userL) LoadUsernameDocuments(ctx context.Context, e boil.ContextExecutor, 
 
 	for _, foreign := range resultSlice {
 		for _, local := range slice {
-			if queries.Equal(local.Username, foreign.Username) {
+			if local.Username == foreign.Username {
 				local.R.UsernameDocuments = append(local.R.UsernameDocuments, foreign)
 				if foreign.R == nil {
 					foreign.R = &documentR{}
@@ -503,7 +517,7 @@ func (o *User) AddUsernameDocuments(ctx context.Context, exec boil.ContextExecut
 	var err error
 	for _, rel := range related {
 		if insert {
-			queries.Assign(&rel.Username, o.Username)
+			rel.Username = o.Username
 			if err = rel.Insert(ctx, exec, boil.Infer()); err != nil {
 				return errors.Wrap(err, "failed to insert into foreign table")
 			}
@@ -524,7 +538,7 @@ func (o *User) AddUsernameDocuments(ctx context.Context, exec boil.ContextExecut
 				return errors.Wrap(err, "failed to update foreign table")
 			}
 
-			queries.Assign(&rel.Username, o.Username)
+			rel.Username = o.Username
 		}
 	}
 
@@ -545,80 +559,6 @@ func (o *User) AddUsernameDocuments(ctx context.Context, exec boil.ContextExecut
 			rel.R.UsernameUser = o
 		}
 	}
-	return nil
-}
-
-// SetUsernameDocuments removes all previously related items of the
-// user replacing them completely with the passed
-// in related items, optionally inserting them as new records.
-// Sets o.R.UsernameUser's UsernameDocuments accordingly.
-// Replaces o.R.UsernameDocuments with related.
-// Sets related.R.UsernameUser's UsernameDocuments accordingly.
-func (o *User) SetUsernameDocuments(ctx context.Context, exec boil.ContextExecutor, insert bool, related ...*Document) error {
-	query := "update \"main\".\"document\" set \"username\" = null where \"username\" = $1"
-	values := []interface{}{o.Username}
-	if boil.IsDebug(ctx) {
-		writer := boil.DebugWriterFrom(ctx)
-		fmt.Fprintln(writer, query)
-		fmt.Fprintln(writer, values)
-	}
-	_, err := exec.ExecContext(ctx, query, values...)
-	if err != nil {
-		return errors.Wrap(err, "failed to remove relationships before set")
-	}
-
-	if o.R != nil {
-		for _, rel := range o.R.UsernameDocuments {
-			queries.SetScanner(&rel.Username, nil)
-			if rel.R == nil {
-				continue
-			}
-
-			rel.R.UsernameUser = nil
-		}
-		o.R.UsernameDocuments = nil
-	}
-
-	return o.AddUsernameDocuments(ctx, exec, insert, related...)
-}
-
-// RemoveUsernameDocuments relationships from objects passed in.
-// Removes related items from R.UsernameDocuments (uses pointer comparison, removal does not keep order)
-// Sets related.R.UsernameUser.
-func (o *User) RemoveUsernameDocuments(ctx context.Context, exec boil.ContextExecutor, related ...*Document) error {
-	if len(related) == 0 {
-		return nil
-	}
-
-	var err error
-	for _, rel := range related {
-		queries.SetScanner(&rel.Username, nil)
-		if rel.R != nil {
-			rel.R.UsernameUser = nil
-		}
-		if _, err = rel.Update(ctx, exec, boil.Whitelist("username")); err != nil {
-			return err
-		}
-	}
-	if o.R == nil {
-		return nil
-	}
-
-	for _, rel := range related {
-		for i, ri := range o.R.UsernameDocuments {
-			if rel != ri {
-				continue
-			}
-
-			ln := len(o.R.UsernameDocuments)
-			if ln > 1 && i < ln-1 {
-				o.R.UsernameDocuments[i] = o.R.UsernameDocuments[ln-1]
-			}
-			o.R.UsernameDocuments = o.R.UsernameDocuments[:ln-1]
-			break
-		}
-	}
-
 	return nil
 }
 

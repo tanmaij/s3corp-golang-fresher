@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"github.com/friendsofgo/errors"
-	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
@@ -24,10 +23,10 @@ import (
 
 // Document is an object representing the database table.
 type Document struct {
-	DocumentID string      `boil:"documentid" json:"documentid" toml:"documentid" yaml:"documentid"`
-	Subject    string      `boil:"subject" json:"subject" toml:"subject" yaml:"subject"`
-	CreatedAt  null.Time   `boil:"createdat" json:"createdat,omitempty" toml:"createdat" yaml:"createdat,omitempty"`
-	Username   null.String `boil:"username" json:"username,omitempty" toml:"username" yaml:"username,omitempty"`
+	DocumentID string    `boil:"documentid" json:"documentid" toml:"documentid" yaml:"documentid"`
+	Subject    string    `boil:"subject" json:"subject" toml:"subject" yaml:"subject"`
+	CreatedAt  time.Time `boil:"createdat" json:"createdat" toml:"createdat" yaml:"createdat"`
+	Username   string    `boil:"username" json:"username" toml:"username" yaml:"username"`
 
 	R *documentR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L documentL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -82,64 +81,37 @@ func (w whereHelperstring) NIN(slice []string) qm.QueryMod {
 	return qm.WhereNotIn(fmt.Sprintf("%s NOT IN ?", w.field), values...)
 }
 
-type whereHelpernull_Time struct{ field string }
+type whereHelpertime_Time struct{ field string }
 
-func (w whereHelpernull_Time) EQ(x null.Time) qm.QueryMod {
-	return qmhelper.WhereNullEQ(w.field, false, x)
+func (w whereHelpertime_Time) EQ(x time.Time) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.EQ, x)
 }
-func (w whereHelpernull_Time) NEQ(x null.Time) qm.QueryMod {
-	return qmhelper.WhereNullEQ(w.field, true, x)
+func (w whereHelpertime_Time) NEQ(x time.Time) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.NEQ, x)
 }
-func (w whereHelpernull_Time) LT(x null.Time) qm.QueryMod {
+func (w whereHelpertime_Time) LT(x time.Time) qm.QueryMod {
 	return qmhelper.Where(w.field, qmhelper.LT, x)
 }
-func (w whereHelpernull_Time) LTE(x null.Time) qm.QueryMod {
+func (w whereHelpertime_Time) LTE(x time.Time) qm.QueryMod {
 	return qmhelper.Where(w.field, qmhelper.LTE, x)
 }
-func (w whereHelpernull_Time) GT(x null.Time) qm.QueryMod {
+func (w whereHelpertime_Time) GT(x time.Time) qm.QueryMod {
 	return qmhelper.Where(w.field, qmhelper.GT, x)
 }
-func (w whereHelpernull_Time) GTE(x null.Time) qm.QueryMod {
+func (w whereHelpertime_Time) GTE(x time.Time) qm.QueryMod {
 	return qmhelper.Where(w.field, qmhelper.GTE, x)
 }
-
-func (w whereHelpernull_Time) IsNull() qm.QueryMod    { return qmhelper.WhereIsNull(w.field) }
-func (w whereHelpernull_Time) IsNotNull() qm.QueryMod { return qmhelper.WhereIsNotNull(w.field) }
-
-type whereHelpernull_String struct{ field string }
-
-func (w whereHelpernull_String) EQ(x null.String) qm.QueryMod {
-	return qmhelper.WhereNullEQ(w.field, false, x)
-}
-func (w whereHelpernull_String) NEQ(x null.String) qm.QueryMod {
-	return qmhelper.WhereNullEQ(w.field, true, x)
-}
-func (w whereHelpernull_String) LT(x null.String) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.LT, x)
-}
-func (w whereHelpernull_String) LTE(x null.String) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.LTE, x)
-}
-func (w whereHelpernull_String) GT(x null.String) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.GT, x)
-}
-func (w whereHelpernull_String) GTE(x null.String) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.GTE, x)
-}
-
-func (w whereHelpernull_String) IsNull() qm.QueryMod    { return qmhelper.WhereIsNull(w.field) }
-func (w whereHelpernull_String) IsNotNull() qm.QueryMod { return qmhelper.WhereIsNotNull(w.field) }
 
 var DocumentWhere = struct {
 	DocumentID whereHelperstring
 	Subject    whereHelperstring
-	CreatedAt  whereHelpernull_Time
-	Username   whereHelpernull_String
+	CreatedAt  whereHelpertime_Time
+	Username   whereHelperstring
 }{
 	DocumentID: whereHelperstring{field: "\"main\".\"document\".\"documentid\""},
 	Subject:    whereHelperstring{field: "\"main\".\"document\".\"subject\""},
-	CreatedAt:  whereHelpernull_Time{field: "\"main\".\"document\".\"createdat\""},
-	Username:   whereHelpernull_String{field: "\"main\".\"document\".\"username\""},
+	CreatedAt:  whereHelpertime_Time{field: "\"main\".\"document\".\"createdat\""},
+	Username:   whereHelperstring{field: "\"main\".\"document\".\"username\""},
 }
 
 // DocumentRels is where relationship names are stored.
@@ -181,8 +153,8 @@ type documentL struct{}
 
 var (
 	documentAllColumns            = []string{"documentid", "subject", "createdat", "username"}
-	documentColumnsWithoutDefault = []string{"subject"}
-	documentColumnsWithDefault    = []string{"documentid", "createdat", "username"}
+	documentColumnsWithoutDefault = []string{"subject", "username"}
+	documentColumnsWithDefault    = []string{"documentid", "createdat"}
 	documentPrimaryKeyColumns     = []string{"documentid"}
 	documentGeneratedColumns      = []string{}
 )
@@ -507,9 +479,7 @@ func (documentL) LoadUsernameUser(ctx context.Context, e boil.ContextExecutor, s
 		if object.R == nil {
 			object.R = &documentR{}
 		}
-		if !queries.IsNil(object.Username) {
-			args = append(args, object.Username)
-		}
+		args = append(args, object.Username)
 
 	} else {
 	Outer:
@@ -519,14 +489,12 @@ func (documentL) LoadUsernameUser(ctx context.Context, e boil.ContextExecutor, s
 			}
 
 			for _, a := range args {
-				if queries.Equal(a, obj.Username) {
+				if a == obj.Username {
 					continue Outer
 				}
 			}
 
-			if !queries.IsNil(obj.Username) {
-				args = append(args, obj.Username)
-			}
+			args = append(args, obj.Username)
 
 		}
 	}
@@ -584,7 +552,7 @@ func (documentL) LoadUsernameUser(ctx context.Context, e boil.ContextExecutor, s
 
 	for _, local := range slice {
 		for _, foreign := range resultSlice {
-			if queries.Equal(local.Username, foreign.Username) {
+			if local.Username == foreign.Username {
 				local.R.UsernameUser = foreign
 				if foreign.R == nil {
 					foreign.R = &userR{}
@@ -624,7 +592,7 @@ func (documentL) LoadDocumentidDocumentitems(ctx context.Context, e boil.Context
 			}
 
 			for _, a := range args {
-				if queries.Equal(a, obj.DocumentID) {
+				if a == obj.DocumentID {
 					continue Outer
 				}
 			}
@@ -682,7 +650,7 @@ func (documentL) LoadDocumentidDocumentitems(ctx context.Context, e boil.Context
 
 	for _, foreign := range resultSlice {
 		for _, local := range slice {
-			if queries.Equal(local.DocumentID, foreign.Documentid) {
+			if local.DocumentID == foreign.Documentid {
 				local.R.DocumentidDocumentitems = append(local.R.DocumentidDocumentitems, foreign)
 				if foreign.R == nil {
 					foreign.R = &documentItemR{}
@@ -723,7 +691,7 @@ func (o *Document) SetUsernameUser(ctx context.Context, exec boil.ContextExecuto
 		return errors.Wrap(err, "failed to update local table")
 	}
 
-	queries.Assign(&o.Username, related.Username)
+	o.Username = related.Username
 	if o.R == nil {
 		o.R = &documentR{
 			UsernameUser: related,
@@ -743,39 +711,6 @@ func (o *Document) SetUsernameUser(ctx context.Context, exec boil.ContextExecuto
 	return nil
 }
 
-// RemoveUsernameUser relationship.
-// Sets o.R.UsernameUser to nil.
-// Removes o from all passed in related items' relationships struct.
-func (o *Document) RemoveUsernameUser(ctx context.Context, exec boil.ContextExecutor, related *User) error {
-	var err error
-
-	queries.SetScanner(&o.Username, nil)
-	if _, err = o.Update(ctx, exec, boil.Whitelist("username")); err != nil {
-		return errors.Wrap(err, "failed to update local table")
-	}
-
-	if o.R != nil {
-		o.R.UsernameUser = nil
-	}
-	if related == nil || related.R == nil {
-		return nil
-	}
-
-	for i, ri := range related.R.UsernameDocuments {
-		if queries.Equal(o.Username, ri.Username) {
-			continue
-		}
-
-		ln := len(related.R.UsernameDocuments)
-		if ln > 1 && i < ln-1 {
-			related.R.UsernameDocuments[i] = related.R.UsernameDocuments[ln-1]
-		}
-		related.R.UsernameDocuments = related.R.UsernameDocuments[:ln-1]
-		break
-	}
-	return nil
-}
-
 // AddDocumentidDocumentitems adds the given related objects to the existing relationships
 // of the document, optionally inserting them as new records.
 // Appends related to o.R.DocumentidDocumentitems.
@@ -784,7 +719,7 @@ func (o *Document) AddDocumentidDocumentitems(ctx context.Context, exec boil.Con
 	var err error
 	for _, rel := range related {
 		if insert {
-			queries.Assign(&rel.Documentid, o.DocumentID)
+			rel.Documentid = o.DocumentID
 			if err = rel.Insert(ctx, exec, boil.Infer()); err != nil {
 				return errors.Wrap(err, "failed to insert into foreign table")
 			}
@@ -805,7 +740,7 @@ func (o *Document) AddDocumentidDocumentitems(ctx context.Context, exec boil.Con
 				return errors.Wrap(err, "failed to update foreign table")
 			}
 
-			queries.Assign(&rel.Documentid, o.DocumentID)
+			rel.Documentid = o.DocumentID
 		}
 	}
 
@@ -826,80 +761,6 @@ func (o *Document) AddDocumentidDocumentitems(ctx context.Context, exec boil.Con
 			rel.R.DocumentidDocument = o
 		}
 	}
-	return nil
-}
-
-// SetDocumentidDocumentitems removes all previously related items of the
-// document replacing them completely with the passed
-// in related items, optionally inserting them as new records.
-// Sets o.R.DocumentidDocument's DocumentidDocumentitems accordingly.
-// Replaces o.R.DocumentidDocumentitems with related.
-// Sets related.R.DocumentidDocument's DocumentidDocumentitems accordingly.
-func (o *Document) SetDocumentidDocumentitems(ctx context.Context, exec boil.ContextExecutor, insert bool, related ...*DocumentItem) error {
-	query := "update \"main\".\"documentitem\" set \"documentid\" = null where \"documentid\" = $1"
-	values := []interface{}{o.DocumentID}
-	if boil.IsDebug(ctx) {
-		writer := boil.DebugWriterFrom(ctx)
-		fmt.Fprintln(writer, query)
-		fmt.Fprintln(writer, values)
-	}
-	_, err := exec.ExecContext(ctx, query, values...)
-	if err != nil {
-		return errors.Wrap(err, "failed to remove relationships before set")
-	}
-
-	if o.R != nil {
-		for _, rel := range o.R.DocumentidDocumentitems {
-			queries.SetScanner(&rel.Documentid, nil)
-			if rel.R == nil {
-				continue
-			}
-
-			rel.R.DocumentidDocument = nil
-		}
-		o.R.DocumentidDocumentitems = nil
-	}
-
-	return o.AddDocumentidDocumentitems(ctx, exec, insert, related...)
-}
-
-// RemoveDocumentidDocumentitems relationships from objects passed in.
-// Removes related items from R.DocumentidDocumentitems (uses pointer comparison, removal does not keep order)
-// Sets related.R.DocumentidDocument.
-func (o *Document) RemoveDocumentidDocumentitems(ctx context.Context, exec boil.ContextExecutor, related ...*DocumentItem) error {
-	if len(related) == 0 {
-		return nil
-	}
-
-	var err error
-	for _, rel := range related {
-		queries.SetScanner(&rel.Documentid, nil)
-		if rel.R != nil {
-			rel.R.DocumentidDocument = nil
-		}
-		if _, err = rel.Update(ctx, exec, boil.Whitelist("documentid")); err != nil {
-			return err
-		}
-	}
-	if o.R == nil {
-		return nil
-	}
-
-	for _, rel := range related {
-		for i, ri := range o.R.DocumentidDocumentitems {
-			if rel != ri {
-				continue
-			}
-
-			ln := len(o.R.DocumentidDocumentitems)
-			if ln > 1 && i < ln-1 {
-				o.R.DocumentidDocumentitems[i] = o.R.DocumentidDocumentitems[ln-1]
-			}
-			o.R.DocumentidDocumentitems = o.R.DocumentidDocumentitems[:ln-1]
-			break
-		}
-	}
-
 	return nil
 }
 

@@ -1,0 +1,1 @@
+ALTER TABLE "main"."user" DROP COLUMN Role;

@@ -26,8 +26,8 @@ func (userRepoImpl UserRepoImpl) GetUserByUsername(username string) (*models.Use
 	return user, err
 }
 
-func (userRepoImpl UserRepoImpl) GetUsers(queries ...qm.QueryMod) (models.UserSlice, error) {
-	return models.Users(queries...).All(context.Background(), userRepoImpl.db)
+func (userRepoImpl UserRepoImpl) GetUsers() (models.UserSlice, error) {
+	return models.Users().All(context.Background(), userRepoImpl.db)
 }
 
 func (userRepoImpl UserRepoImpl) CreateUser(user models.User) error {
@@ -40,4 +40,10 @@ func (userRepoImpl UserRepoImpl) UpdateUser(user models.User) (int64, error) {
 
 func (userRepoImpl UserRepoImpl) DeleteUser(username string) (int64, error) {
 	return models.Users(qm.Where("username=?", username)).DeleteAll(context.Background(), userRepoImpl.db)
+}
+func (userRepoImpl UserRepoImpl) GetByUsernameOrEmail(username string, email string) (*models.User, error) {
+	return models.Users(qm.Or2(qm.Where("username=?", username)), qm.Or2(qm.Where("email=?", email))).One(context.Background(), userRepoImpl.db)
+}
+func (userRepoImpl UserRepoImpl) GetUsersByYear(year int) (models.UserSlice, error) {
+	return models.Users(qm.Where("DATE_PART('year', createdat::date)=?", year)).All(context.Background(), userRepoImpl.db)
 }

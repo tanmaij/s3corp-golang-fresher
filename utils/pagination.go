@@ -7,6 +7,6 @@ type Pagination struct {
 	TotalRows  int `json:"totalRows"`
 }
 
-func NewPagination(totalPages int, limit int, page int, totalRows int) *Pagination {
-	return &Pagination{TotalPages: totalPages, Limit: limit, Page: page, TotalRows: totalRows}
+func NewPagination(totalPages int, limit int, page int, totalRows int) Pagination {
+	return Pagination{TotalPages: totalPages, Limit: limit, Page: page, TotalRows: totalRows}
 }

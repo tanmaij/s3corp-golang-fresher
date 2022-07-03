@@ -24,21 +24,13 @@ func main() {
 	}
 	fmt.Println("Server has started on Port", port)
 
+	pkg.InitJWT()
+	
 	userRepo := repository.NewUserRepo(db)
 	userService := service.NewUserService(userRepo)
 	userHandler := handler.NewUserHandler(userService)
 
-	docItemRepo := repository.NewDocItemRepo(db)
-	docItemService := service.NewDocItemService(docItemRepo)
-	docItemHandler := handler.NewDocItemHandler(docItemService)
-
-	docRepo := repository.NewDocRepo(db)
-	docService := service.NewDocService(docRepo)
-	docHandler := handler.NewDocHandler(docService)
-
 	r.Route("/api", func(r chi.Router) {
-		r.Route("/document", docHandler.DocHandler)
-		r.Route("/document-item", docItemHandler.DocItemHandler)
 		r.Route("/user", userHandler.UserHandler)
 	})
 

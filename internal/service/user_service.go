@@ -1,7 +1,6 @@
 package service
 
 import (
-	error2 "s3corp-golang-fresher/internal/errors"
 	"s3corp-golang-fresher/internal/models"
 	"s3corp-golang-fresher/utils"
 )
@@ -9,20 +8,22 @@ import (
 type UserService interface {
 
 	// Login with username and password
-	Login(username string, password string) (*models.User, string, error2.Error)
+	Login(username string, password string) (models.User, string, error)
 
 	// GetUserByUsername Return one user with id parameter
-	GetUserByUsername(username string) (*models.User, error2.Error)
+	GetUserByUsername(username string) (models.User, error)
 
 	// GetUsers Return a user Slice
-	GetUsers(queriesParams map[string]string) (models.UserSlice, *utils.Pagination, error2.Error)
+	GetUsers(queriesParams map[string]int) ([]models.User, utils.Pagination, error)
 
 	// CreateUser Insert data by user parameter
-	CreateUser(user models.User) error2.Error
+	CreateUser(user models.User) error
 
 	// UpdateUser Update one record by user parameter
-	UpdateUser(user models.User) error2.Error
+	UpdateUser(user models.User) error
 
 	// DeleteUser Delete one record by username parameter
-	DeleteUser(username string) error2.Error
+	DeleteUser(username string) error
+
+	UsersStatsCSVFile(year int) ([]byte, error)
 }
