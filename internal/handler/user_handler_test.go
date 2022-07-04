@@ -5,10 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/jwtauth"
-	"github.com/joho/godotenv"
-	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -22,6 +18,11 @@ import (
 	"s3corp-golang-fresher/utils"
 	"strconv"
 	"testing"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/jwtauth"
+	"github.com/joho/godotenv"
+	"github.com/stretchr/testify/require"
 )
 
 // define url to send request for test
@@ -338,8 +339,8 @@ func TestUserHandler_DeleteUser(t *testing.T) {
 
 	//Define type struct for input
 	type Input struct {
-		Username string                 `json:"username"`
-		AuthData map[string]interface{} `json:"authData"`
+		Username string
+		AuthData map[string]interface{}
 	}
 
 	tcs := map[string]struct {
@@ -424,32 +425,51 @@ func TestUserHandler_DeleteUser(t *testing.T) {
 }
 
 func TestUserHandler_UpdateUser(t *testing.T) {
-	// 1. Create new user service mock for test
+	//Create new user service mock for test
 	// Create new user handler with user service mock
 	userServiceMock := new(mocks.UserServiceMock)
 	userHandler = NewUserHandler(userServiceMock)
 
-	type InputType struct {
+	type Input struct {
 		Username string
 		Body     string
+		AuthData map[string]interface{}
 	}
 
 	tcs := map[string]struct {
-		input     InputType
+		input     Input
 		expResult string
 		expStatus int
 		expErr    error
 	}{
 		"success": {
-			input:     InputType{"mai", "test_data/user_handler/request/update_user_success.json"},
+			input: Input{
+				Username: "mai",
+				Body:     "test_data/user_handler/request/update_user_success.json",
+				AuthData: map[string]any{"username": "mai", "role": "user"},
+			},
 			expResult: "Update user successfully",
 			expStatus: http.StatusOK,
 		},
 		"not_found": {
-			input:     InputType{"mai2", "test_data/user_handler/request/update_user_not_found.json"},
+			input: Input{
+				Username: "mai2",
+				Body:     "test_data/user_handler/request/update_user_not_found.json",
+				AuthData: map[string]any{"username": "mai2", "role": "user"},
+			},
 			expResult: "",
 			expStatus: http.StatusNotFound,
 			expErr:    errors.NewError(errors.NotFound, http.StatusNotFound),
+		},
+		"unauthorized": {
+			input: Input{
+				Username: "mai2",
+				Body:     "test_data/user_handler/request/update_user_unauthorized.json",
+				AuthData: map[string]any{"username": "mai", "role": "user"},
+			},
+			expResult: "",
+			expStatus: http.StatusUnauthorized,
+			expErr:    errors.NewError(errors.PermissionDenied, http.StatusUnauthorized),
 		},
 	}
 
@@ -457,7 +477,9 @@ func TestUserHandler_UpdateUser(t *testing.T) {
 		t.Run(desc, func(t *testing.T) {
 
 			// Given
-			input, err := readJsonFile(tc.input.Body) // Get input data from json file
+
+			//Read file to input variable
+			input, err := readJsonFile(tc.input.Body)
 			if err != nil {
 				t.Error("Error on reading the input file")
 			}
@@ -473,15 +495,26 @@ func TestUserHandler_UpdateUser(t *testing.T) {
 			userServiceMock.On("UpdateUser", testUser).Return(tc.expErr)
 
 			// Define http test request
-			r := httptest.NewRequest(http.MethodPut, url+tc.input.Username, bytes.NewBuffer(input))
 			// Define http test response
+			r := httptest.NewRequest(http.MethodPut, url+tc.input.Username, bytes.NewBuffer(input))
 			w := httptest.NewRecorder()
+
 			// Init chi route context
-			rctx := chi.NewRouteContext()
 			// Set username to chi route context
-			rctx.URLParams.Add("username", tc.input.Username)
 			// Add chi route context to request
+			rctx := chi.NewRouteContext()
+			rctx.URLParams.Add("username", tc.input.Username)
 			r = r.WithContext(context.WithValue(r.Context(), chi.RouteCtxKey, rctx))
+
+			// Add accessToken to request header
+			// Create a token form from input auth data
+			// Add token data to context
+			jwtAuth = pkg.GetJWTAuth()
+			token, _, err := jwtAuth.Encode(tc.input.AuthData)
+			if err != nil {
+				t.Fatal("Error on attaching token")
+			}
+			r = r.WithContext(context.WithValue(r.Context(), jwtauth.TokenCtxKey, token))
 
 			//When
 			userHandler.UpdateUser(w, r)

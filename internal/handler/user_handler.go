@@ -3,8 +3,6 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/jwtauth"
 	"net/http"
 	"s3corp-golang-fresher/internal/errors"
 	"s3corp-golang-fresher/internal/models"
@@ -13,6 +11,9 @@ import (
 	"s3corp-golang-fresher/pkg"
 	"strconv"
 	"strings"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/jwtauth"
 )
 
 type UserHandler struct {
@@ -198,20 +199,55 @@ func (userHandler UserHandler) CreateUser(w http.ResponseWriter, r *http.Request
 
 func (userHandler UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 
+	//Get username from url params
 	username := chi.URLParam(r, "username")
-	user := make(map[string]interface{})
-	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+
+	// Get body data
+	body := make(map[string]interface{})
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprint(w, errors.InvalidData)
 		return
 	}
-	name, ok := user["name"]
+
+	// Authenticate
+	// Get user data from context
+	token, claims, err := jwtauth.FromContext(r.Context())
+	if err != nil || token == nil || claims == nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		fmt.Fprint(w, errors.InvalidToken)
+		return
+	}
+	// Get role to authorization
+	role, ok := claims["role"].(string)
+	if !ok {
+		w.WriteHeader(http.StatusUnauthorized)
+		fmt.Fprint(w, errors.InvalidToken)
+		return
+	}
+	// get author username of the request
+	author, ok := claims["username"].(string)
+	if !ok {
+		w.WriteHeader(http.StatusUnauthorized)
+		fmt.Fprint(w, errors.InvalidToken)
+		return
+	}
+
+	// Authorization role or username
+	if role != roles.Admin && author != username {
+		w.WriteHeader(http.StatusUnauthorized)
+		fmt.Fprint(w, errors.PermissionDenied)
+		return
+	}
+
+	//Get user data from body
+	name, ok := body["name"]
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprint(w, "Name is NOT FOUND")
 		return
 	}
-	email, ok := user["email"]
+	email, ok := body["email"]
 	if !ok {
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprint(w, "Email is NOT FOUND")
@@ -222,14 +258,15 @@ func (userHandler UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request
 		fmt.Fprint(w, errors.InvalidEmail)
 		return
 	}
-	newUser := models.User{
+	user := models.User{
 		Username: username,
 		Email:    email.(string),
 		Name:     name.(string)}
-	err := userHandler.UserService.UpdateUser(newUser)
 
-	if err != nil {
-		err.(errors.Error).Response(w)
+	err2 := userHandler.UserService.UpdateUser(user)
+
+	if err2 != nil {
+		err2.(errors.Error).Response(w)
 		return
 	}
 
